@@ -113,40 +113,40 @@
     'use strict';
 
     // Load Algolia library if not already loaded
-    function loadAlgolia(callback) {
-        if (typeof algoliasearch !== 'undefined') {
-            callback();
-            return;
-        }
+    function loadAlgolia() {
+        return new Promise((resolve, reject) => {
+            if (typeof algoliasearch !== 'undefined') {
+                resolve(algoliasearch);
+                return;
+            }
 
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js';
-        script.onload = callback;
-        script.onerror = function() {
-            console.error('Failed to load Algolia search library');
-            document.getElementById('algolia-article-list').innerHTML = 
-                '<div class="article-list-error">Failed to load search library.</div>';
-        };
-        document.head.appendChild(script);
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js';
+            script.onload = () => resolve(window.algoliasearch);
+            script.onerror = () => reject(new Error('Failed to load Algolia'));
+            document.head.appendChild(script);
+        });
     }
 
-    loadAlgolia(function() {
-        // Configuration - can be overridden by setting window.ALGOLIA_ARTICLE_LIST_CONFIG before this script loads
+    // Main initialization
+    async function init() {
         const config = window.ALGOLIA_ARTICLE_LIST_CONFIG || {
             maxArticles: 10,
-            category: null,  // Will be auto-detected from URL
-            tag: null,       // Will be auto-detected from URL
-            sortBy: 'publishedAt:desc'  // Sort by most recent
+            category: null,
+            tag: null,
+            sortBy: 'publishedAt:desc'
         };
 
-        // Algolia configuration
         const ALGOLIA_APP_ID = 'L5HJO2NLX1';
         const ALGOLIA_SEARCH_KEY = 'c458238e59f4e945749c9981281b8f1e';
         const ALGOLIA_INDEX = 'prod_CarolinaPanorama';
 
-        // Initialize Algolia client
-        const searchClient = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_SEARCH_KEY);
-        const index = searchClient.initIndex(ALGOLIA_INDEX);
+        try {
+            const algoliasearch = await loadAlgolia();
+
+            const algoliasearch = await loadAlgolia();
+            const searchClient = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_SEARCH_KEY);
+            const index = searchClient.initIndex(ALGOLIA_INDEX);
 
         // Parse URL for category or tag
         function parseUrlFilters() {
@@ -243,47 +243,50 @@
         }
 
         // Fetch and display articles
-        async function loadArticles() {
-            const container = document.getElementById('algolia-article-list');
+        const container = document.getElementById('algolia-article-list');
+        
+        try {
+            const filters = buildFilters();
             
-            try {
-                const filters = buildFilters();
-                
-                const searchParams = {
-                    hitsPerPage: config.maxArticles,
-                    page: 0
-                };
-                
-                if (filters) {
-                    searchParams.filters = filters;
-                }
-
-                const { hits } = await index.search('', searchParams);
-
-                if (hits.length === 0) {
-                    container.innerHTML = '<div class="article-list-empty">No articles found.</div>';
-                    return;
-                }
-
-                const articlesHtml = hits.map(article => createArticleCard(article)).join('');
-                container.innerHTML = articlesHtml;
-
-            } catch (error) {
-                console.error('Error loading articles:', error);
-                container.innerHTML = `
-                    <div class="article-list-error">
-                        Failed to load articles. Please try again later.
-                    </div>
-                `;
+            const searchParams = {
+                hitsPerPage: config.maxArticles,
+                page: 0
+            };
+            
+            if (filters) {
+                searchParams.filters = filters;
             }
-        }
 
-        // Load articles when DOM is ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', loadArticles);
-        } else {
-            loadArticles();
+            const { hits } = await index.search('', searchParams);
+
+            if (hits.length === 0) {
+                container.innerHTML = '<div class="article-list-empty">No articles found.</div>';
+                return;
+            }
+
+            const articlesHtml = hits.map(article => createArticleCard(article)).join('');
+            container.innerHTML = articlesHtml;
+
+        } catch (error) {
+            console.error('Error loading articles:', error);
+            container.innerHTML = `
+                <div class="article-list-error">
+                    Failed to load articles. Please try again later.
+                </div>
+            `;
         }
-    });
+    } catch (error) {
+        console.error('Initialization error:', error);
+        document.getElementById('algolia-article-list').innerHTML = 
+            '<div class="article-list-error">Failed to initialize widget.</div>';
+    }
+    }
+
+    // Load articles when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 })();
 </script>
