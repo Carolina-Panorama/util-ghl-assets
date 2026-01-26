@@ -108,22 +108,29 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
-
 <script>
 (function() {
     'use strict';
 
-    // Wait for algoliasearch to be available
-    function waitForAlgolia(callback) {
+    // Load Algolia library if not already loaded
+    function loadAlgolia(callback) {
         if (typeof algoliasearch !== 'undefined') {
             callback();
-        } else {
-            setTimeout(() => waitForAlgolia(callback), 100);
+            return;
         }
+
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js';
+        script.onload = callback;
+        script.onerror = function() {
+            console.error('Failed to load Algolia search library');
+            document.getElementById('algolia-article-list').innerHTML = 
+                '<div class="article-list-error">Failed to load search library.</div>';
+        };
+        document.head.appendChild(script);
     }
 
-    waitForAlgolia(function() {
+    loadAlgolia(function() {
         // Configuration - can be overridden by setting window.ALGOLIA_ARTICLE_LIST_CONFIG before this script loads
         const config = window.ALGOLIA_ARTICLE_LIST_CONFIG || {
             maxArticles: 10,
