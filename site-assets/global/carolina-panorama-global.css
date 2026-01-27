@@ -1,0 +1,239 @@
+/* Shared styling for Carolina Panorama
+
+/* SITE-WIDE IMPROVEMENTS */
+
+/* Responsive typography with clamp() for natural scaling - 20% smaller */
+body {
+    font-size: clamp(0.75rem, 0.85vw, 0.875rem);
+}
+
+h1 {
+    font-size: clamp(1.5rem, 3.2vw, 2rem);
+}
+
+h2 {
+    font-size: clamp(1.25rem, 2.8vw, 1.75rem);
+}
+
+h3 {
+    font-size: clamp(1rem, 2vw, 1.25rem);
+}
+
+/* ARTICLE CARD BASE STYLES */
+.cp-article-card {
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.cp-article-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.cp-article-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Article Image */
+.cp-article-image {
+    width: 100%;
+    object-fit: contain;
+    object-position: center;
+    height: auto;
+    aspect-ratio: 16/9;
+    display: block;
+    background: #f7fafc;
+}
+
+.cp-article-image.is-loading {
+  visibility: hidden;
+}
+
+
+/* Article Content Container */
+.cp-article-content {
+    padding: clamp(8px, 1.2vw, 12px);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(4px, 0.6vw, 6px);
+}
+
+/* Category Tags */
+.cp-article-tags {
+    display: flex;
+    gap: clamp(4px, 0.6vw, 6px);
+    flex-wrap: wrap;
+    margin-bottom: clamp(2px, 0.3vw, 3px);
+}
+
+.cp-article-tag {
+    display: inline-block;
+    background: #3b82f6;
+    color: white;
+    padding: clamp(2px, 0.4vw, 3px) clamp(6px, 0.8vw, 8px);
+    border-radius: 3px;
+    font-size: clamp(0.625rem, 0.75vw, 0.7rem);
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.cp-article-tag.business, .blog-tag.business {
+    background-color: #10b981 !important;
+    color: #fff !important;
+}
+
+.cp-article-tag.politics, .blog-tag.politics {
+    background-color: #8b5cf6 !important;
+    color: #fff !important;
+}
+
+.cp-article-tag.sports, .blog-tag.sports {
+    background-color: #73000A !important;
+    color: #fff !important;
+}
+
+.cp-article-tag.hbcu, .blog-tag.hbcu {
+    background-color: #003366 !important;
+    color: #fff !important;
+}
+
+.cp-article-tag.health, .blog-tag.health {
+    background-color: #ec4899 !important;
+    color: #fff !important;
+}
+
+.cp-article-tag.education, .blog-tag.education {
+    background-color: #06b6d4 !important;
+    color: #fff !important;
+}
+
+.cp-article-tag.local, .blog-tag.local {
+    background-color: #3b82f6 !important;
+    color: #fff !important;
+}
+
+
+/* Article Title */
+.cp-article-title {
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0;
+    line-height: 1.25;
+    font-size: clamp(0.875rem, 1.4vw, 1rem);
+}
+
+/* Article Meta (author, date) */
+.cp-article-meta {
+    display: flex;
+    align-items: center;
+    gap: clamp(4px, 0.6vw, 6px);
+    color: #666;
+    font-size: clamp(0.7rem, 0.85vw, 0.75rem);
+    margin-top: clamp(2px, 0.3vw, 3px);
+}
+
+.cp-article-author {
+    display: flex;
+    align-items: center;
+    gap: clamp(2px, 0.3vw, 3px);
+}
+
+.cp-article-author::before {
+    content: "👤";
+    font-size: clamp(0.7rem, 0.85vw, 0.75rem);
+}
+
+.cp-article-date {
+    display: flex;
+    align-items: center;
+    gap: clamp(2px, 0.3vw, 3px);
+}
+
+.cp-article-date::before {
+    content: "•";
+    color: #cbd5e0;
+}
+
+/* Article Description */
+.cp-article-description {
+    color: #666;
+    line-height: 1.4;
+    margin: clamp(4px, 0.6vw, 6px) 0 0 0;
+    font-size: clamp(0.75rem, 1vw, 0.8125rem);
+    flex: 1;
+}
+
+/* Read More Link */
+.cp-article-read-more {
+    display: inline-flex;
+    align-items: center;
+    gap: clamp(2px, 0.3vw, 3px);
+    color: #3b82f6;
+    font-weight: 500;
+    font-size: clamp(0.7rem, 0.85vw, 0.75rem);
+    margin-top: clamp(4px, 0.6vw, 6px);
+}
+
+.cp-article-read-more::after {
+    content: "→";
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .cp-article-content {
+        padding: 12px;
+    }
+
+    .cp-article-title {
+        font-size: 1rem;
+    }
+
+    .cp-article-description {
+        font-size: 0.875rem;
+    }
+}
+
+/* Size Variants */
+.cp-article-card-featured .cp-article-image {
+    height: clamp(200px, 24vw, 240px);
+}
+
+.cp-article-card-featured .cp-article-title {
+    font-size: clamp(1.125rem, 2vw, 1.25rem);
+}
+
+.cp-article-card-medium .cp-article-image {
+    height: clamp(140px, 16vw, 160px);
+}
+
+.cp-article-card-small .cp-article-image {
+    height: clamp(100px, 12vw, 120px);
+}
+
+.cp-article-card-small .cp-article-title {
+    font-size: clamp(0.8rem, 1.2vw, 0.875rem);
+}
+
+.cp-article-card-small .cp-article-description {
+    font-size: clamp(0.7rem, 0.95vw, 0.75rem);
+    display: -webkit-box;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.blog-image.blog-image-corner.blog-image-compact {
+    object-fit: contain;
+}

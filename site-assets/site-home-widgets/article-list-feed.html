@@ -1,0 +1,206 @@
+<!-- Article List Feed Widget -->
+<!-- Include shared-article-card-styles.css in your page -->
+<!-- This widget displays articles in a vertical list layout matching the screenshot -->
+
+<style>
+    .article-list-feed-wrapper {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: clamp(12px, 1.6vw, 20px);
+    }
+
+    .article-list-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    /* List-specific card layout */
+    .article-list-item {
+        display: block;
+    }
+
+    .article-list-item .cp-article-card {
+        display: grid;
+        grid-template-columns: 1fr 280px;
+        gap: clamp(20px, 2.5vw, 32px);
+        align-items: center;
+        padding: clamp(16px, 2vw, 24px) clamp(8px, 1vw, 10px);
+    }
+
+    .article-list-item .cp-article-card-link {
+        display: contents;
+    }
+
+    .article-list-item .cp-article-content {
+        padding: 0;
+        gap: clamp(6px, 0.8vw, 8px);
+        order: 1;
+    }
+
+    .article-list-item .cp-article-image {
+        height: 180px;
+        border-radius: 6px;
+        order: 2;
+    }
+
+    .article-list-item .cp-article-title {
+        font-size: clamp(1.125rem, 2vw, 1.375rem);
+        line-height: 1.25;
+        margin-bottom: clamp(6px, 0.8vw, 8px);
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        font-weight: 600;
+    }
+
+    .article-list-item .cp-article-meta {
+        margin: 0;
+        font-size: clamp(0.8rem, 1vw, 0.875rem);
+    }
+
+    .article-list-item .cp-article-description {
+        font-size: clamp(0.875rem, 1.1vw, 0.9375rem);
+        line-height: 1.5;
+        margin: clamp(8px, 1vw, 10px) 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .article-list-item .cp-article-tags {
+        margin-top: clamp(8px, 1vw, 10px);
+    }
+
+    .article-list-item .cp-article-read-more {
+        margin-top: clamp(8px, 1vw, 10px);
+        font-size: clamp(0.875rem, 1vw, 0.9375rem);
+    }
+
+    /* Separator between articles */
+    .article-list-item:not(:last-child) {
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .article-list-item .cp-article-card {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .article-list-item .cp-article-content {
+            order: 2;
+        }
+
+        .article-list-item .cp-article-image {
+            order: 1;
+            height: 200px;
+        }
+
+        .article-list-item .cp-article-title {
+            font-size: 1.125rem;
+        }
+
+        .article-list-item .cp-article-description {
+            -webkit-line-clamp: 2;
+        }
+    }
+</style>
+
+<div class="article-list-feed-wrapper">
+    <div class="article-list-container" id="article-list-container">
+        <!-- Loading state -->
+        <div class="article-list-item">
+            <article class="cp-article-card">
+                <div style="width: 350px; height: 220px; background: #f7fafc; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #9ca3af;">
+                    Loading...
+                </div>
+                <div class="cp-article-content">
+                    <div class="cp-article-tags">
+                        <span class="cp-article-tag">Loading</span>
+                    </div>
+                    <h2 class="cp-article-title">Loading articles...</h2>
+                    <div class="cp-article-meta">
+                        <span class="cp-article-author">Carolina Panorama</span>
+                        <span class="cp-article-date">Today</span>
+                    </div>
+                    <p class="cp-article-description">Please wait while we load the latest content...</p>
+                </div>
+            </article>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        const container = document.getElementById('article-list-container');
+
+        // Configuration
+        const RSS_FEED_URL = 'https://rss-link.com/feed/9Iv8kFcMiUgScXzMPv23?blogId=iWSdkAQOuuRNrWiAHku1&limit=50&loadContent=false';
+        const MAX_ARTICLES = 10; // Number of articles to display
+
+        // Fetch latest articles from backend
+        async function fetchLatestArticles() {
+            // You can add categoryUrlSlug if needed
+            return await window.CarolinaPanorama.fetchArticlesFromBackend({ limit: MAX_ARTICLES });
+        }
+
+        // Use global CarolinaPanorama helpers
+        const fetchArticleMetadata = window.CarolinaPanorama.fetchArticleMetadata;
+        const proxiedLeadConnectorUrl = window.CarolinaPanorama.proxiedLeadConnectorUrl;
+        function formatDate(date) {
+            const options = { month: 'numeric', day: 'numeric', year: 'numeric' };
+            return 'Published on: ' + new Date(date).toLocaleDateString('en-US', options);
+        }
+
+        // Create article card HTML
+        function createArticleCard(data) {
+            const categoryTags = data.categories.slice(0, 2).map(cat => {
+                const categoryClass = cat.toLowerCase().replace(/\s+/g, '-');
+                return `<span class="cp-article-tag ${categoryClass}">${cat}</span>`;
+            }).join('');
+            const proxied = proxiedLeadConnectorUrl(data.image, 800);
+            
+            return `
+                <div class="article-list-item">
+                    <article class="cp-article-card">
+                        <a href="${data.url}" class="cp-article-card-link">
+                            <img src="${proxied || data.image}" alt="${data.title}" class="cp-article-image">
+                            <div class="cp-article-content">
+                                <h2 class="cp-article-title">${data.title}</h2>
+                                <div class="cp-article-meta">
+                                    <span class="cp-article-author">${data.author}</span>
+                                    <span class="cp-article-date">${formatDate(data.date)}</span>
+                                </div>
+                                <p class="cp-article-description">${data.description}</p>
+                                <div class="cp-article-tags">
+                                    ${categoryTags}
+                                </div>
+                                <span class="cp-article-read-more">Read More</span>
+                            </div>
+                        </a>
+                    </article>
+                </div>
+            `;
+        }
+
+        // Initialize feed
+        async function initializeFeed() {
+            // Fetch latest articles from backend
+            const articles = await fetchLatestArticles();
+            if (!articles || articles.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666;">No articles found.</p>';
+                return;
+            }
+            const cardsHTML = articles.map(data => createArticleCard(data)).join('');
+            container.innerHTML = cardsHTML;
+        }
+
+        // Initialize on page load
+        initializeFeed();
+    })();
+</script>

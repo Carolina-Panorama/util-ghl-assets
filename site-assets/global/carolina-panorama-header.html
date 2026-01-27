@@ -1,0 +1,415 @@
+<style>
+    /* Shared styling for Carolina Panorama
+
+    /* SITE-WIDE IMPROVEMENTS */
+
+    /* Responsive typography with clamp() for natural scaling - 20% smaller */
+    body {
+        font-size: clamp(0.75rem, 0.85vw, 0.875rem);
+    }
+
+    h1 {
+        font-size: clamp(1.5rem, 3.2vw, 2rem);
+    }
+
+    h2 {
+        font-size: clamp(1.25rem, 2.8vw, 1.75rem);
+    }
+
+    h3 {
+        font-size: clamp(1rem, 2vw, 1.25rem);
+    }
+
+    /* ARTICLE CARD BASE STYLES */
+    .cp-article-card {
+        border-radius: 6px;
+        overflow: hidden;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+        transition: transform 0.2s, box-shadow 0.2s;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .cp-article-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    .cp-article-card-link {
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    /* Article Image */
+    .cp-article-image {
+        width: 100%;
+        object-fit: contain;
+        object-position: center;
+        height: auto;
+        aspect-ratio: 16/9;
+        display: block;
+        background: #f7fafc;
+    }
+
+    .cp-article-image.is-loading {
+    visibility: hidden;
+    }
+
+
+    /* Article Content Container */
+    .cp-article-content {
+        padding: clamp(8px, 1.2vw, 12px);
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: clamp(4px, 0.6vw, 6px);
+    }
+
+    /* Category Tags */
+    .cp-article-tags {
+        display: flex;
+        gap: clamp(4px, 0.6vw, 6px);
+        flex-wrap: wrap;
+        margin-bottom: clamp(2px, 0.3vw, 3px);
+    }
+
+    .cp-article-tag {
+        display: inline-block;
+        background: #3b82f6;
+        color: white;
+        padding: clamp(2px, 0.4vw, 3px) clamp(6px, 0.8vw, 8px);
+        border-radius: 3px;
+        font-size: clamp(0.625rem, 0.75vw, 0.7rem);
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+
+    .cp-article-tag.business, .blog-tag.business {
+        background-color: #10b981 !important;
+        color: #fff !important;
+    }
+
+    .cp-article-tag.politics, .blog-tag.politics {
+        background-color: #8b5cf6 !important;
+        color: #fff !important;
+    }
+
+    .cp-article-tag.sports, .blog-tag.sports {
+        background-color: #73000A !important;
+        color: #fff !important;
+    }
+
+    .cp-article-tag.hbcu, .blog-tag.hbcu {
+        background-color: #003366 !important;
+        color: #fff !important;
+    }
+
+    .cp-article-tag.health, .blog-tag.health {
+        background-color: #ec4899 !important;
+        color: #fff !important;
+    }
+
+    .cp-article-tag.education, .blog-tag.education {
+        background-color: #06b6d4 !important;
+        color: #fff !important;
+    }
+
+    .cp-article-tag.local, .blog-tag.local {
+        background-color: #3b82f6 !important;
+        color: #fff !important;
+    }
+
+
+    /* Article Title */
+    .cp-article-title {
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 0;
+        line-height: 1.25;
+        font-size: clamp(0.875rem, 1.4vw, 1rem);
+    }
+
+    /* Article Meta (author, date) */
+    .cp-article-meta {
+        display: flex;
+        align-items: center;
+        gap: clamp(4px, 0.6vw, 6px);
+        color: #666;
+        font-size: clamp(0.7rem, 0.85vw, 0.75rem);
+        margin-top: clamp(2px, 0.3vw, 3px);
+    }
+
+    .cp-article-author {
+        display: flex;
+        align-items: center;
+        gap: clamp(2px, 0.3vw, 3px);
+    }
+
+    .cp-article-author::before {
+        content: "👤";
+        font-size: clamp(0.7rem, 0.85vw, 0.75rem);
+    }
+
+    .cp-article-date {
+        display: flex;
+        align-items: center;
+        gap: clamp(2px, 0.3vw, 3px);
+    }
+
+    .cp-article-date::before {
+        content: "•";
+        color: #cbd5e0;
+    }
+
+    /* Article Description */
+    .cp-article-description {
+        color: #666;
+        line-height: 1.4;
+        margin: clamp(4px, 0.6vw, 6px) 0 0 0;
+        font-size: clamp(0.75rem, 1vw, 0.8125rem);
+        flex: 1;
+    }
+
+    /* Read More Link */
+    .cp-article-read-more {
+        display: inline-flex;
+        align-items: center;
+        gap: clamp(2px, 0.3vw, 3px);
+        color: #3b82f6;
+        font-weight: 500;
+        font-size: clamp(0.7rem, 0.85vw, 0.75rem);
+        margin-top: clamp(4px, 0.6vw, 6px);
+    }
+
+    .cp-article-read-more::after {
+        content: "→";
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .cp-article-content {
+            padding: 12px;
+        }
+
+        .cp-article-title {
+            font-size: 1rem;
+        }
+
+        .cp-article-description {
+            font-size: 0.875rem;
+        }
+    }
+
+    /* Size Variants */
+    .cp-article-card-featured .cp-article-image {
+        height: clamp(200px, 24vw, 240px);
+    }
+
+    .cp-article-card-featured .cp-article-title {
+        font-size: clamp(1.125rem, 2vw, 1.25rem);
+    }
+
+    .cp-article-card-medium .cp-article-image {
+        height: clamp(140px, 16vw, 160px);
+    }
+
+    .cp-article-card-small .cp-article-image {
+        height: clamp(100px, 12vw, 120px);
+    }
+
+    .cp-article-card-small .cp-article-title {
+        font-size: clamp(0.8rem, 1.2vw, 0.875rem);
+    }
+
+    .cp-article-card-small .cp-article-description {
+        font-size: clamp(0.7rem, 0.95vw, 0.75rem);
+        display: -webkit-box;
+        line-clamp: 2;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .blog-image.blog-image-corner.blog-image-compact {
+        object-fit: contain;
+    }
+</style>
+
+<script>
+    /**
+     * Carolina Panorama Global JavaScript
+     * Shared utilities and functions for Carolina Panorama widgets
+     */
+
+    // Initialize when DOM is ready
+    (function() {
+        'use strict';
+        
+        // Utility: Format date for display
+        window.CarolinaPanorama = window.CarolinaPanorama || {};
+        
+        window.CarolinaPanorama.formatDate = function(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        };
+        
+        // Utility: Truncate text to specified length
+        window.CarolinaPanorama.truncateText = function(text, maxLength) {
+            if (!text || text.length <= maxLength) return text;
+            return text.substring(0, maxLength).trim() + '...';
+        };
+        
+        // Utility: Get category class for styling
+        window.CarolinaPanorama.getCategoryClass = function(category) {
+            if (!category) return '';
+            return category.toLowerCase().replace(/\s+/g, '-');
+        };
+
+        // Normalize and proxy image URLs via LeadConnector image proxy
+        window.CarolinaPanorama.normalizeUrl = function(url) {
+            if (!url) return url;
+            url = String(url).trim();
+            if (!/^https?:\/\//i.test(url)) url = 'https://' + url.replace(/^\/+/, '');
+            url = url.replace(/^http:\/\//i, 'https://');
+
+            // Try to decode one level of double-encoding if present
+            try {
+                if (/%25/.test(url)) {
+                    const decoded = decodeURIComponent(url);
+                    if (/^https?:\/\//i.test(decoded)) url = decoded;
+                }
+            } catch (e) {
+                // ignore decode errors
+            }
+
+            return url;
+        };
+
+        window.CarolinaPanorama.proxiedLeadConnectorUrl = function(originalUrl, width = 1200) {
+            if (!originalUrl) return originalUrl;
+            const normalized = window.CarolinaPanorama.normalizeUrl(originalUrl);
+            if (!normalized) return normalized;
+            const safe = encodeURI(normalized);
+            return 'https://images.leadconnectorhq.com/image/f_webp/q_80/r_' + width + '/u_' + safe;
+        };
+        
+        /**
+         * Fetch metadata for a single article URL by scraping meta tags and common selectors.
+         * Returns an object with url, title, description, image, author, date, categories.
+         */
+        window.CarolinaPanorama.fetchArticleMetadata = async function(url) {
+            try {
+                const response = await fetch(url);
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                const getMetaContent = (property) => {
+                    const ogTag = doc.querySelector(`meta[property="${property}"]`);
+                    const nameTag = doc.querySelector(`meta[name="${property}"]`);
+                    return ogTag?.content || nameTag?.content || '';
+                };
+
+                const title = getMetaContent('og:title') ||
+                    getMetaContent('twitter:title') ||
+                    doc.querySelector('title')?.textContent ||
+                    'Article';
+
+                const description = getMetaContent('og:description') ||
+                    getMetaContent('twitter:description') ||
+                    getMetaContent('description') ||
+                    '';
+
+                const image = getMetaContent('og:image') ||
+                    getMetaContent('twitter:image') ||
+                    'https://via.placeholder.com/400x200';
+
+                const authorElement = doc.querySelector('.blog-author-name, [itemprop="author"]');
+                const author = authorElement?.textContent?.trim() || 'Carolina Panorama';
+
+                let dateStr = doc.querySelector('.blog-date')?.textContent?.trim();
+                if (!dateStr) {
+                    const dateElement = doc.querySelector('[itemprop="datePublished"], time');
+                    dateStr = dateElement?.getAttribute('datetime') || dateElement?.textContent;
+                }
+                const date = dateStr ? new Date(dateStr) : new Date();
+
+                const categoryElements = doc.querySelectorAll('.blog-category, [rel="category tag"]');
+                const categories = Array.from(categoryElements)
+                    .map(el => el.textContent.trim().replace(/^\|\s*/, ''))
+                    .filter(Boolean);
+
+                return {
+                    url: url,
+                    title: title,
+                    description: description,
+                    image: image,
+                    author: author,
+                    date: date,
+                    categories: categories.length > 0 ? categories : ['News']
+                };
+            } catch (error) {
+                console.error('Error fetching article metadata:', error);
+                return null;
+            }
+        };
+
+        /**
+         * Fetch articles from backend API and map to metadata objects.
+         * @param {Object} params - { limit, offset, categoryUrlSlug }
+         * @returns {Promise<Array>} Array of article metadata objects
+         */
+        window.CarolinaPanorama.fetchArticlesFromBackend = async function({
+            limit = 10,
+            offset = 0,
+            categoryUrlSlug = null,
+            locationId = '9Iv8kFcMiUgScXzMPv23',
+            blogId = 'iWSdkAQOuuRNrWiAHku1'
+        } = {}) {
+            const baseUrl = 'https://backend.leadconnectorhq.com/blogs/posts/list';
+            const params = [
+                `locationId=${encodeURIComponent(locationId)}`,
+                `blogId=${encodeURIComponent(blogId)}`,
+                `limit=${encodeURIComponent(limit)}`,
+                `offset=${encodeURIComponent(offset)}`
+            ];
+            if (categoryUrlSlug) {
+                params.push(`categoryUrlSlug=${encodeURIComponent(categoryUrlSlug)}`);
+            }
+            const url = `${baseUrl}?${params.join('&')}`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`Backend fetch failed: ${response.status}`);
+                const data = await response.json();
+                if (!data.blogPosts || !Array.isArray(data.blogPosts)) return [];
+                return data.blogPosts.map(post => ({
+                    url: post.canonicalLink,
+                    title: post.title,
+                    description: post.description,
+                    image: post.imageUrl,
+                    author: post.author?.name || 'Unknown',
+                    date: post.publishedAt,
+                    categories: Array.isArray(post.categories) && post.categories.length > 0
+                        ? post.categories.map(cat => cat.label)
+                        : ['News']
+                }));
+            } catch (error) {
+                console.error('Error fetching articles from backend:', error);
+                return [];
+            }
+        };
+        console.log('Carolina Panorama Global JS loaded');
+    })();
+
+
+</script>

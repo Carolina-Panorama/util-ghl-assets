@@ -1,0 +1,544 @@
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/instantsearch.css@7.4.5/themes/satellite-min.css" />
+
+<style>
+    .search-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .search-header {
+        margin-bottom: 30px;
+    }
+
+    .search-box {
+        margin-bottom: 20px;
+    }
+
+    .search-filters {
+        display: grid;
+        grid-template-columns: 250px 1fr;
+        gap: 30px;
+    }
+
+    .search-sidebar {
+        background: #f7fafc;
+        padding: 20px;
+        border-radius: 8px;
+        height: fit-content;
+    }
+
+    .search-results {
+        flex: 1;
+    }
+
+    .ais-SearchBox-input {
+        width: 100%;
+        padding: 12px 16px 12px 45px;
+        font-size: 16px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        transition: border-color 0.2s;
+    }
+
+    .ais-SearchBox-input:focus {
+        outline: none;
+        border-color: #4299e1;
+    }
+
+    .ais-RefinementList-item {
+        padding: 8px 0;
+    }
+
+    .ais-RefinementList-label {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+    }
+
+    .ais-RefinementList-count {
+        margin-left: auto;
+        background: #e2e8f0;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+    }
+
+    .search-result-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 16px;
+        transition: box-shadow 0.2s;
+        display: flex;
+        gap: 20px;
+        min-height: 190px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .search-result-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .search-result-image {
+        flex-shrink: 0;
+        width: 200px;
+        height: 150px;
+        border-radius: 6px;
+        overflow: hidden;
+        background: #f7fafc;
+    }
+
+    .search-result-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .search-result-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .ais-SearchBox {
+        position: relative;
+    }
+
+    .ais-SearchBox-submit,
+    .ais-SearchBox-reset {
+        padding: 8px;
+    }
+
+    .ais-SearchBox-submitIcon,
+    .ais-SearchBox-resetIcon {
+        width: 16px;
+        height: 16px;
+    }
+
+    .search-result-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0 0 8px 0;
+        color: #1a202c;
+    }
+
+    .search-result-title a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .search-result-title a:hover {
+        color: #4299e1;
+    }
+
+    .search-result-meta {
+        font-size: 0.875rem;
+        color: #718096;
+        margin-bottom: 12px;
+    }
+
+    .search-result-excerpt {
+        color: #4a5568;
+        line-height: 1.6;
+    }
+
+    mark {
+        background: #fef08a;
+        padding: 2px 4px;
+        border-radius: 2px;
+    }
+
+    /* Custom multi-select dropdown styles */
+    .custom-dropdown {
+        position: relative;
+        margin-bottom: 15px;
+    }
+
+    .custom-dropdown-input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        cursor: pointer;
+        background: white;
+        font-size: 14px;
+    }
+
+    .custom-dropdown-input:focus {
+        outline: none;
+        border-color: #4299e1;
+    }
+
+    .custom-dropdown-list {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        margin-top: 4px;
+        max-height: 300px;
+        overflow-y: auto;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        display: none;
+    }
+
+    .custom-dropdown-list.active {
+        display: block;
+    }
+
+    .custom-dropdown-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        transition: background 0.2s;
+    }
+
+    .custom-dropdown-item:hover {
+        background: #f7fafc;
+    }
+
+    .custom-dropdown-item input[type="checkbox"] {
+        margin-right: 8px;
+    }
+
+    .custom-dropdown-item label {
+        cursor: pointer;
+        flex: 1;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .custom-dropdown-count {
+        color: #718096;
+        font-size: 12px;
+    }
+
+    @media (max-width: 768px) {
+        .search-filters {
+            grid-template-columns: 1fr;
+        }
+        
+        .search-sidebar {
+            order: 2;
+        }
+    }
+</style>
+
+<div class="search-container">
+    <div class="search-header">
+        <h1>Search Articles</h1>
+    </div>
+
+    <div id="searchbox" class="search-box"></div>
+
+    <div class="search-filters">
+        <aside class="search-sidebar">
+            <h3>Filter by Category</h3>
+            <div id="category-filter"></div>
+
+            <h3 style="margin-top: 30px;">Filter by Author</h3>
+            <div id="author-filter"></div>
+
+            <h3 style="margin-top: 30px;">Filter by Tags</h3>
+            <div id="tags-filter"></div>
+
+            <h3 style="margin-top: 30px;">Filter by Date</h3>
+            <div id="date-filter"></div>
+        </aside>
+
+        <div class="search-results">
+            <div id="stats"></div>
+            <div id="hits"></div>
+            <div id="pagination"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/algoliasearch@4.14.2/dist/algoliasearch-lite.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/instantsearch.js@4.49.1/dist/instantsearch.production.min.js"></script>
+
+<script>
+    // Use public Algolia Index and Search API Key - (read-only and safe to use on frontend)
+    const searchClient = algoliasearch('L5HJO2NLX1', '303488aa839f0fc1c6c0467ae84a0354');
+
+    // Check URL for query parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryParam = urlParams.get('q') || urlParams.get('query') || '';
+
+    const search = instantsearch({
+        indexName: 'prod_CarolinaPanorama', // Must match your ALGOLIA_INDEX_NAME
+        searchClient,
+        routing: true, // Updates URL with search params
+        initialUiState: {
+            prod_CarolinaPanorama: {
+                query: queryParam,
+            },
+        },
+    });
+
+    // Search box
+    search.addWidgets([
+        instantsearch.widgets.searchBox({
+            container: '#searchbox',
+            placeholder: 'Search articles...',
+            showSubmit: false,
+            showReset: true,
+        })
+    ]);
+
+    // Stats
+    search.addWidgets([
+        instantsearch.widgets.stats({
+            container: '#stats',
+            templates: {
+                text(data, { html }) {
+                    let resultText = '';
+                    if (data.nbHits === 0) {
+                        resultText = 'No results';
+                    } else if (data.nbHits === 1) {
+                        resultText = '1 result';
+                    } else {
+                        resultText = `${data.nbHits.toLocaleString()} results`;
+                    }
+                    return html`<span>${resultText} found in ${data.processingTimeMS}ms</span>`;
+                }
+            }
+        })
+    ]);
+
+    // Category filter
+    search.addWidgets([
+        instantsearch.widgets.refinementList({
+            container: '#category-filter',
+            attribute: 'categories',
+            limit: 10,
+            showMore: true,
+        })
+    ]);
+
+    // Custom multi-select dropdown for Author
+    const authorDropdown = instantsearch.connectors.connectRefinementList(
+        (renderOptions, isFirstRender) => {
+            const { items, refine } = renderOptions;
+            const container = document.querySelector('#author-filter');
+            
+            if (isFirstRender) {
+                const html = `
+                    <div class="custom-dropdown">
+                        <input type="text" 
+                               class="custom-dropdown-input" 
+                               placeholder="Search authors..."
+                               id="author-search"
+                               autocomplete="off">
+                        <div class="custom-dropdown-list" id="author-list"></div>
+                    </div>
+                `;
+                container.innerHTML = html;
+                
+                const input = container.querySelector('#author-search');
+                const list = container.querySelector('#author-list');
+                
+                input.addEventListener('focus', () => {
+                    list.classList.add('active');
+                });
+                
+                // Close on click outside
+                document.addEventListener('click', (e) => {
+                    if (!container.contains(e.target)) {
+                        list.classList.remove('active');
+                    }
+                });
+            }
+            
+            const input = container.querySelector('#author-search');
+            const list = container.querySelector('#author-list');
+            const searchValue = input.value.toLowerCase();
+            
+            // Client-side filtering
+            const filteredItems = items.filter(item => 
+                item.label.toLowerCase().includes(searchValue)
+            );
+            
+            list.innerHTML = filteredItems.map(item => `
+                <div class="custom-dropdown-item">
+                    <input type="checkbox" 
+                           id="author-${item.value.replace(/\s+/g, '-')}" 
+                           ${item.isRefined ? 'checked' : ''}
+                           data-value="${item.value}">
+                    <label for="author-${item.value.replace(/\s+/g, '-')}">
+                        <span>${item.label}</span>
+                        <span class="custom-dropdown-count">${item.count}</span>
+                    </label>
+                </div>
+            `).join('') || '<div style="padding: 12px; color: #718096;">No authors found</div>';
+            
+            list.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    refine(e.target.dataset.value);
+                });
+            });
+        }
+    );
+
+    search.addWidgets([
+        authorDropdown({
+            attribute: 'author',
+            limit: 100,
+        })
+    ]);
+
+    // Custom multi-select dropdown for Tags
+    const tagsDropdown = instantsearch.connectors.connectRefinementList(
+        (renderOptions, isFirstRender) => {
+            const { items, refine } = renderOptions;
+            const container = document.querySelector('#tags-filter');
+            
+            if (isFirstRender) {
+                const html = `
+                    <div class="custom-dropdown">
+                        <input type="text" 
+                               class="custom-dropdown-input" 
+                               placeholder="Search tags..."
+                               id="tags-search"
+                               autocomplete="off">
+                        <div class="custom-dropdown-list" id="tags-list"></div>
+                    </div>
+                `;
+                container.innerHTML = html;
+                
+                const input = container.querySelector('#tags-search');
+                const list = container.querySelector('#tags-list');
+                
+                input.addEventListener('focus', () => {
+                    list.classList.add('active');
+                });
+                
+                // Close on click outside
+                document.addEventListener('click', (e) => {
+                    if (!container.contains(e.target)) {
+                        list.classList.remove('active');
+                    }
+                });
+            }
+            
+            const input = container.querySelector('#tags-search');
+            const list = container.querySelector('#tags-list');
+            const searchValue = input.value.toLowerCase();
+            
+            // Client-side filtering
+            const filteredItems = items.filter(item => 
+                item.label.toLowerCase().includes(searchValue)
+            );
+            
+            list.innerHTML = filteredItems.map(item => `
+                <div class="custom-dropdown-item">
+                    <input type="checkbox" 
+                           id="tag-${item.value.replace(/\s+/g, '-')}" 
+                           ${item.isRefined ? 'checked' : ''}
+                           data-value="${item.value}">
+                    <label for="tag-${item.value.replace(/\s+/g, '-')}">
+                        <span>${item.label.toLowerCase()}</span>
+                        <span class="custom-dropdown-count">${item.count}</span>
+                    </label>
+                </div>
+            `).join('') || '<div style="padding: 12px; color: #718096;">No tags found</div>';
+            
+            list.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    refine(e.target.dataset.value);
+                });
+            });
+        }
+    );
+
+    search.addWidgets([
+        tagsDropdown({
+            attribute: 'tags',
+            limit: 100,
+            searchable: true,
+        })
+    ]);
+
+    // Date filter - predefined ranges
+    const now = Date.now();
+    const dayMs = 24 * 60 * 60 * 1000;
+    
+    search.addWidgets([
+        instantsearch.widgets.numericMenu({
+            container: '#date-filter',
+            attribute: 'publishedAt',
+            items: [
+                { label: 'All time' },
+                { label: 'Last 7 days', start: now - (7 * dayMs) },
+                { label: 'Last 30 days', start: now - (30 * dayMs) },
+                { label: 'Last 6 months', start: now - (180 * dayMs) },
+                { label: 'Last year', start: now - (365 * dayMs) },
+            ],
+        })
+    ]);
+
+    // Results
+    search.addWidgets([
+        instantsearch.widgets.hits({
+            container: '#hits',
+            templates: {
+                item(hit, { html, components }) {
+                    return html`
+                        <div class="search-result-card">
+                            ${hit.image ? html`
+                                <div class="search-result-image">
+                                    <img src="${hit.image}" alt="${hit.title}" />
+                                </div>
+                            ` : ''}
+                            <div class="search-result-content">
+                                <h2 class="search-result-title">
+                                    <a href="${hit.url}">
+                                        ${components.Highlight({ attribute: 'title', hit })}
+                                    </a>
+                                </h2>
+                                <div class="search-result-meta">
+                                    ${hit.author ? html`<span>${hit.author} • </span>` : ''}
+                                    ${hit.formattedDate}
+                                    ${hit.categories && hit.categories.length > 0 ? html`
+                                        <span> • ${hit.categories.join(', ')}</span>
+                                    ` : ''}
+                                </div>
+                                <p class="search-result-excerpt">
+                                    ${components.Highlight({ attribute: 'description', hit })}
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                },
+                empty: 'No results found for <q>{{query}}</q>'
+            },
+            transformItems(items) {
+                return items.map(item => ({
+                    ...item,
+                    // Format date
+                    formattedDate: new Date(item.publishedAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    })
+                }));
+            }
+        })
+    ]);
+
+    // Pagination
+    search.addWidgets([
+        instantsearch.widgets.pagination({
+            container: '#pagination',
+            padding: 2,
+        })
+    ]);
+
+    search.start();
+</script>

@@ -1,0 +1,74 @@
+<style>
+    #category-title {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin: 40px 0 20px 0;
+        padding-bottom: 20px;
+        border-bottom: 3px solid #2563eb;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        font-family: 'Georgia', serif;
+    }
+
+    /* Alternative gradient underline */
+    #category-title.gradient-line {
+        border-bottom: none;
+        position: relative;
+    }
+
+    #category-title.gradient-line::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 200px;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, #2563eb, transparent);
+    }
+</style>
+
+<h1 id="category-title" style="display: none;"></h1>
+
+<script>
+(function() {
+    // Get current URL path
+    const urlPath = window.location.pathname;
+    const titleElement = document.getElementById('category-title');
+    
+    // Check for category
+    const categoryMatch = urlPath.match(/\/category\/([^\/]+)/);
+    
+    if (categoryMatch) {
+        const currentCategoryId = categoryMatch[1];
+        
+        // Find the matching category link and get its aria-label
+        const categoryLink = document.querySelector(`a[href*="/category/${currentCategoryId}"]`);
+        
+        if (categoryLink) {
+            const categoryName = categoryLink.getAttribute('aria-label');
+            titleElement.textContent = categoryName;
+            titleElement.style.display = 'block';
+        }
+    }
+    // Check for tag
+    else if (urlPath.match(/\/tag\/([^\/]+)/)) {
+        const tagMatch = urlPath.match(/\/tag\/([^\/]+)/);
+        const tagSlug = tagMatch[1];
+        // Format tag: replace dashes with spaces and capitalize
+        const tagName = tagSlug.replace(/-/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+        titleElement.textContent = `Tag: ${tagName}`;
+        titleElement.style.display = 'block';
+    }
+    // Check if on main article feed page (ends with article-feed)
+    else if (urlPath.endsWith('article-feed') || urlPath.endsWith('article-feed/')) {
+        titleElement.textContent = 'Latest Articles';
+        titleElement.style.display = 'block';
+    }
+})();
+</script>

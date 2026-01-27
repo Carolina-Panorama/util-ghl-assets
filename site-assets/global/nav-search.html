@@ -1,0 +1,93 @@
+<style>
+    .nav-search-form {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        max-width: 400px;
+        width: 100%;
+    }
+
+    .nav-search-input {
+        flex: 1;
+        padding: 8px 12px;
+        font-size: 14px;
+        border: 1px solid #d1d5db;
+        border-right: none;
+        border-radius: 6px 0 0 6px;
+        outline: none;
+        transition: border-color 0.2s;
+        min-width: 0;
+    }
+
+    .nav-search-input:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 1px #2563eb;
+    }
+
+    .nav-search-input::placeholder {
+        color: #9ca3af;
+    }
+
+    .nav-search-button {
+        padding: 8px 16px;
+        background: #003366;
+        color: white;
+        border: 1px solid #2563eb;
+        border-radius: 0 6px 6px 0;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: background-color 0.2s;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .nav-search-button:hover {
+        background: #1d4ed8;
+        border-color: #1d4ed8;
+    }
+
+    .nav-search-button:active {
+        background: #1e40af;
+        border-color: #1e40af;
+    }
+
+    .nav-search-icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+        .nav-search-form {
+            max-width: none;
+        }
+
+        .nav-search-input {
+            font-size: 16px; /* Prevents zoom on iOS */
+        }
+
+        .nav-search-button span {
+            display: none; /* Hide "Search" text on mobile */
+        }
+    }
+</style>
+
+<form action="/query" method="get" class="nav-search-form">
+    <input 
+        type="search" 
+        name="q" 
+        class="nav-search-input" 
+        placeholder="Search articles..."
+        autocomplete="off"
+        aria-label="Search articles">
+    <button type="submit" class="nav-search-button" aria-label="Submit search">
+        <svg class="nav-search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+        </svg>
+        <span>Search</span>
+    </button>
+</form>

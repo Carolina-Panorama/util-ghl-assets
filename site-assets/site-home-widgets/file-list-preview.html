@@ -1,0 +1,603 @@
+<script>
+    const WORKER_URL = 'https://file-list-worker.carolinapanorama.org';
+</script>
+
+<style>
+    .file-list-widget {
+        width: 100%;
+        height: 100%;
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .file-list-container {
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+    }
+
+    .file-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .year-group {
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .year-group:last-child {
+        border-bottom: none;
+    }
+
+    .year-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        background-color: #f9fafb;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: #1a1a1a;
+        transition: background-color 0.2s;
+        user-select: none;
+    }
+
+    .year-header:hover {
+        background-color: #f3f4f6;
+    }
+
+    .year-toggle {
+        width: 20px;
+        height: 20px;
+        transition: transform 0.2s;
+    }
+
+    .year-toggle.collapsed {
+        transform: rotate(-90deg);
+    }
+
+    .year-toggle svg {
+        width: 100%;
+        height: 100%;
+        fill: #6b7280;
+    }
+
+    .year-files {
+        max-height: 400px;
+        overflow-y: auto;
+        transition: max-height 0.3s ease-out;
+    }
+
+    .year-files.collapsed {
+        max-height: 0;
+        overflow-y: hidden;
+    }
+
+    .file-item {
+        border-bottom: 1px solid #e5e7eb;
+        transition: background-color 0.2s;
+    }
+
+    .file-item:last-child {
+        border-bottom: none;
+    }
+
+    .file-item:hover {
+        background-color: #f9fafb;
+    }
+
+    .file-item-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        gap: 16px;
+    }
+
+    .file-link {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: #1a1a1a;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .file-icon {
+        width: 20px;
+        height: 20px;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+
+    .file-icon svg {
+        width: 100%;
+        height: 100%;
+        fill: #6b7280;
+    }
+
+    .file-name {
+        font-size: 1rem;
+        font-weight: 500;
+        color: #1a1a1a;
+    }
+
+    .file-link:hover .file-name {
+        color: #2563eb;
+    }
+
+    .download-button {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        background-color: #2563eb;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background-color 0.2s;
+        flex-shrink: 0;
+    }
+
+    .download-button:hover {
+        background-color: #003366;
+    }
+
+    .download-icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    .download-icon svg {
+        width: 100%;
+        height: 100%;
+        fill: currentColor;
+    }
+
+    .preview-button {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        background-color: #10b981;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background-color 0.2s;
+        flex-shrink: 0;
+    }
+
+    .preview-button:hover {
+        background-color: #059669;
+    }
+
+    .preview-icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    .preview-icon svg {
+        width: 100%;
+        height: 100%;
+        fill: currentColor;
+    }
+
+    .file-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    /* PDF Preview Modal */
+    .pdf-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        z-index: 10000;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .pdf-modal.active {
+        display: flex;
+    }
+
+    .pdf-modal-content {
+        position: relative;
+        width: 100%;
+        max-width: 1200px;
+        height: 90vh;
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .pdf-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        background: #f9fafb;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .pdf-modal-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 0;
+    }
+
+    .pdf-modal-close {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+    }
+
+    .pdf-modal-close:hover {
+        background-color: #e5e7eb;
+    }
+
+    .pdf-modal-close svg {
+        width: 24px;
+        height: 24px;
+        fill: #6b7280;
+    }
+
+    .pdf-modal-viewer {
+        flex: 1;
+        width: 100%;
+        border: none;
+    }
+
+    /* Custom scrollbar */
+    .file-list-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .file-list-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .file-list-container::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 4px;
+    }
+
+    .file-list-container::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+</style>
+
+<div class="file-list-widget">
+    <div class="file-list-container">
+        <ul class="file-list" id="fileList"></ul>
+    </div>
+</div>
+
+<!-- PDF Preview Modal -->
+<div class="pdf-modal" id="pdfModal">
+    <div class="pdf-modal-content">
+        <div class="pdf-modal-header">
+            <h3 class="pdf-modal-title" id="pdfModalTitle">PDF Preview</h3>
+            <button class="pdf-modal-close" id="pdfModalClose">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+                </svg>
+            </button>
+        </div>
+        <iframe class="pdf-modal-viewer" id="pdfModalViewer"></iframe>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // Files will be loaded from the Worker
+        let files = {};
+
+        // File icon SVG
+        const fileIconSVG = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+            </svg>
+        `;
+
+        // Download icon SVG
+        const downloadIconSVG = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
+            </svg>
+        `;
+
+        // Preview icon SVG
+        const previewIconSVG = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/>
+            </svg>
+        `;
+
+        // Chevron down icon SVG
+        const chevronDownSVG = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"/>
+            </svg>
+        `;
+
+        // Parse date string and return Date object
+        // Expects format: M-D-YYYY (e.g., "1-7-2026")
+        function parseDate(dateString) {
+            const parts = dateString.split('-');
+            const month = parseInt(parts[0], 10);
+            const day = parseInt(parts[1], 10);
+            const year = parseInt(parts[2], 10);
+            return new Date(year, month - 1, day);
+        }
+
+        // Format date string to human-readable format
+        // Expects format: M-D-YYYY (e.g., "1-7-2026")
+        function formatDate(dateString) {
+            const date = parseDate(dateString);
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        // Group files by year and sort by date descending
+        function groupAndSortFiles() {
+            const fileEntries = Object.entries(files).map(([path, date]) => ({
+                path,
+                date,
+                dateObj: parseDate(date),
+                year: parseDate(date).getFullYear()
+            }));
+
+            // Sort by date descending (newest first)
+            fileEntries.sort((a, b) => b.dateObj - a.dateObj);
+
+            // Group by year
+            const grouped = {};
+            fileEntries.forEach(file => {
+                if (!grouped[file.year]) {
+                    grouped[file.year] = [];
+                }
+                grouped[file.year].push(file);
+            });
+
+            // Sort years descending
+            return Object.keys(grouped)
+                .sort((a, b) => b - a)
+                .map(year => ({
+                    year,
+                    files: grouped[year]
+                }));
+        }
+
+        // Toggle year section
+        function toggleYear(yearElement, toggleIcon) {
+            yearElement.classList.toggle('collapsed');
+            toggleIcon.classList.toggle('collapsed');
+        }
+
+        // Render the file list
+        function renderFileList() {
+            const fileListElement = document.getElementById('fileList');
+            fileListElement.innerHTML = '';
+
+            const yearGroups = groupAndSortFiles();
+            const currentYear = new Date().getFullYear();
+
+            yearGroups.forEach(({ year, files }) => {
+                // Create year group container
+                const yearGroupDiv = document.createElement('div');
+                yearGroupDiv.className = 'year-group';
+
+                // Create year header
+                const yearHeader = document.createElement('div');
+                yearHeader.className = 'year-header';
+
+                const yearTitle = document.createElement('span');
+                yearTitle.textContent = year;
+
+                const toggleIcon = document.createElement('span');
+                toggleIcon.className = 'year-toggle';
+                toggleIcon.innerHTML = chevronDownSVG;
+
+                // Collapse all years except current year
+                const isCollapsed = parseInt(year, 10) !== currentYear;
+                if (isCollapsed) {
+                    toggleIcon.classList.add('collapsed');
+                }
+
+                yearHeader.appendChild(yearTitle);
+                yearHeader.appendChild(toggleIcon);
+
+                // Create files container
+                const yearFilesDiv = document.createElement('div');
+                yearFilesDiv.className = isCollapsed ? 'year-files collapsed' : 'year-files';
+
+                // Add click event to header
+                yearHeader.addEventListener('click', () => {
+                    toggleYear(yearFilesDiv, toggleIcon);
+                });
+
+                // Create file items
+                files.forEach(({ path, date }) => {
+                    const listItem = document.createElement('div');
+                    listItem.className = 'file-item';
+
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'file-item-wrapper';
+
+                    const link = document.createElement('a');
+                    link.className = 'file-link';
+                    link.href = path;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+
+                    const iconSpan = document.createElement('span');
+                    iconSpan.className = 'file-icon';
+                    iconSpan.innerHTML = fileIconSVG;
+
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'file-name';
+                    nameSpan.textContent = formatDate(date);
+
+                    link.appendChild(iconSpan);
+                    link.appendChild(nameSpan);
+
+                    // Create actions container
+                    const actionsDiv = document.createElement('div');
+                    actionsDiv.className = 'file-actions';
+
+                    // Preview button
+                    const previewBtn = document.createElement('button');
+                    previewBtn.className = 'preview-button';
+                    previewBtn.type = 'button';
+
+                    const previewIcon = document.createElement('span');
+                    previewIcon.className = 'preview-icon';
+                    previewIcon.innerHTML = previewIconSVG;
+
+                    const previewText = document.createElement('span');
+                    previewText.textContent = 'Preview';
+
+                    previewBtn.appendChild(previewIcon);
+                    previewBtn.appendChild(previewText);
+
+                    // Add click event for preview
+                    previewBtn.addEventListener('click', () => {
+                        openPDFModal(path, formatDate(date));
+                    });
+
+                    // Download button
+                    const downloadBtn = document.createElement('a');
+                    downloadBtn.className = 'download-button';
+                    downloadBtn.href = path;
+                    downloadBtn.download = '';
+                    downloadBtn.rel = 'noopener noreferrer';
+
+                    const downloadIcon = document.createElement('span');
+                    downloadIcon.className = 'download-icon';
+                    downloadIcon.innerHTML = downloadIconSVG;
+
+                    const downloadText = document.createElement('span');
+                    downloadText.textContent = 'Download';
+
+                    downloadBtn.appendChild(downloadIcon);
+                    downloadBtn.appendChild(downloadText);
+
+                    actionsDiv.appendChild(previewBtn);
+                    actionsDiv.appendChild(downloadBtn);
+
+                    wrapper.appendChild(link);
+                    wrapper.appendChild(actionsDiv);
+                    listItem.appendChild(wrapper);
+                    yearFilesDiv.appendChild(listItem);
+                });
+
+                yearGroupDiv.appendChild(yearHeader);
+                yearGroupDiv.appendChild(yearFilesDiv);
+                fileListElement.appendChild(yearGroupDiv);
+            });
+        }
+
+        // Open PDF modal
+        function openPDFModal(pdfUrl, title) {
+            const modal = document.getElementById('pdfModal');
+            const viewer = document.getElementById('pdfModalViewer');
+            const modalTitle = document.getElementById('pdfModalTitle');
+            
+            modalTitle.textContent = title;
+            viewer.src = pdfUrl;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close PDF modal
+        function closePDFModal() {
+            const modal = document.getElementById('pdfModal');
+            const viewer = document.getElementById('pdfModalViewer');
+            
+            modal.classList.remove('active');
+            viewer.src = '';
+            document.body.style.overflow = '';
+        }
+
+        // Set up modal close handlers
+        function setupModalHandlers() {
+            const modal = document.getElementById('pdfModal');
+            const closeBtn = document.getElementById('pdfModalClose');
+            
+            // Close on button click
+            closeBtn.addEventListener('click', closePDFModal);
+            
+            // Close on backdrop click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closePDFModal();
+                }
+            });
+            
+            // Close on Escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal.classList.contains('active')) {
+                    closePDFModal();
+                }
+            });
+        }
+
+        // Fetch files from Cloudflare Worker
+        async function loadFiles() {
+            try {
+                const response = await fetch(WORKER_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error loading files:', error);
+                const fileListElement = document.getElementById('fileList');
+                fileListElement.innerHTML = '<div style="padding: 20px; text-align: center; color: #6b7280;">Unable to load files.</div>';
+                return {};
+            }
+        }
+
+        // Initialize the widget
+        setupModalHandlers();
+        
+        loadFiles().then(loadedFiles => {
+            if (Object.keys(loadedFiles).length > 0) {
+                files = loadedFiles;
+                renderFileList();
+            } else if (Object.keys(loadedFiles).length === 0) {
+                const fileListElement = document.getElementById('fileList');
+                fileListElement.innerHTML = '<div style="padding: 20px; text-align: center; color: #6b7280;">No files available.</div>';
+            }
+        });
+    })();
+</script>
