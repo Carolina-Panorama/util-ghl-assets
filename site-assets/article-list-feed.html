@@ -246,13 +246,26 @@
 
         // Convert original image URL to LeadConnector image-proxy URL (safe fallback to original)
         function proxiedLeadConnectorUrl(originalUrl, width = 800) {
-            try {
-                if (!originalUrl) return originalUrl;
-                if (originalUrl.includes('images.leadconnectorhq.com')) return originalUrl;
-                return 'https://images.leadconnectorhq.com/image/f_webp/q_80/r_' + width + '/u_' + encodeURIComponent(originalUrl);
-            } catch (e) {
-                return originalUrl;
-            }
+                    try {
+                        if (window.CarolinaPanorama && typeof window.CarolinaPanorama.proxiedLeadConnectorUrl === 'function') {
+                            return window.CarolinaPanorama.proxiedLeadConnectorUrl(originalUrl, width);
+                        }
+                    } catch (e) {}
+
+                    try {
+                        if (!originalUrl) return originalUrl;
+                        if (originalUrl.includes('images.leadconnectorhq.com')) return originalUrl;
+                        let url = String(originalUrl).trim();
+                        if (!/^https?:\/\//i.test(url)) url = 'https://' + url.replace(/^\/+/, '');
+                        url = url.replace(/^http:\/\//i, 'https://');
+                        if (/%25/.test(url)) {
+                            try { const d = decodeURIComponent(url); if (/^https?:\/\//i.test(d)) url = d; } catch (e) {}
+                        }
+                        const safe = encodeURI(url);
+                        return 'https://images.leadconnectorhq.com/image/f_webp/q_80/r_' + width + '/u_' + safe;
+                    } catch (e) {
+                        return originalUrl;
+                    }
         }
 
         // Create article card HTML

@@ -31,6 +31,34 @@
         if (!category) return '';
         return category.toLowerCase().replace(/\s+/g, '-');
     };
+
+    // Normalize and proxy image URLs via LeadConnector image proxy
+    window.CarolinaPanorama.normalizeUrl = function(url) {
+        if (!url) return url;
+        url = String(url).trim();
+        if (!/^https?:\/\//i.test(url)) url = 'https://' + url.replace(/^\/+/, '');
+        url = url.replace(/^http:\/\//i, 'https://');
+
+        // Try to decode one level of double-encoding if present
+        try {
+            if (/%25/.test(url)) {
+                const decoded = decodeURIComponent(url);
+                if (/^https?:\/\//i.test(decoded)) url = decoded;
+            }
+        } catch (e) {
+            // ignore decode errors
+        }
+
+        return url;
+    };
+
+    window.CarolinaPanorama.proxiedLeadConnectorUrl = function(originalUrl, width = 1200) {
+        if (!originalUrl) return originalUrl;
+        const normalized = window.CarolinaPanorama.normalizeUrl(originalUrl);
+        if (!normalized) return normalized;
+        const safe = encodeURI(normalized);
+        return 'https://images.leadconnectorhq.com/image/f_webp/q_80/r_' + width + '/u_' + safe;
+    };
     
     // Apply color scheme to tags (covers both .blog-tag and .cp-article-tag)
     function applyTagColors(root = document) {
