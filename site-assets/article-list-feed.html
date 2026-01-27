@@ -243,18 +243,30 @@
             return 'Published on: ' + date.toLocaleDateString('en-US', options);
         }
 
+        // Convert original image URL to LeadConnector image-proxy URL (safe fallback to original)
+        function proxiedLeadConnectorUrl(originalUrl, width = 800) {
+            try {
+                if (!originalUrl) return originalUrl;
+                if (originalUrl.includes('images.leadconnectorhq.com')) return originalUrl;
+                return 'https://images.leadconnectorhq.com/image/f_webp/q_80/r_' + width + '/u_' + encodeURIComponent(originalUrl);
+            } catch (e) {
+                return originalUrl;
+            }
+        }
+
         // Create article card HTML
         function createArticleCard(data) {
             const categoryTags = data.categories.slice(0, 2).map(cat => {
                 const categoryClass = cat.toLowerCase().replace(/\s+/g, '-');
                 return `<span class="cp-article-tag ${categoryClass}">${cat}</span>`;
             }).join('');
+            const proxied = proxiedLeadConnectorUrl(data.image, 800);
             
             return `
                 <div class="article-list-item">
                     <article class="cp-article-card">
                         <a href="${data.url}" class="cp-article-card-link">
-                            <img src="${data.image}" alt="${data.title}" class="cp-article-image">
+                            <img src="${proxied || data.image}" alt="${data.title}" class="cp-article-image">
                             <div class="cp-article-content">
                                 <h2 class="cp-article-title">${data.title}</h2>
                                 <div class="cp-article-meta">

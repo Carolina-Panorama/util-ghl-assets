@@ -199,16 +199,28 @@
             return date.toLocaleDateString('en-US', options);
         }
 
+        // Convert original image URL to LeadConnector image-proxy URL (safe fallback to original)
+        function proxiedLeadConnectorUrl(originalUrl, width = 800) {
+            try {
+                if (!originalUrl) return originalUrl;
+                if (originalUrl.includes('images.leadconnectorhq.com')) return originalUrl;
+                return 'https://images.leadconnectorhq.com/image/f_webp/q_80/r_' + width + '/u_' + encodeURIComponent(originalUrl);
+            } catch (e) {
+                return originalUrl;
+            }
+        }
+
         // Create article card HTML
         function createArticleCard(data) {
             const categoryTag = data.categories[0] || 'News';
             const categoryClass = categoryTag.toLowerCase().replace(/\s+/g, '-');
+            const proxied = proxiedLeadConnectorUrl(data.image, 600);
             
             return `
                 <div class="trending-carousel-item">
                     <article class="cp-article-card cp-article-card-medium">
                         <a href="${data.url}" class="cp-article-card-link">
-                            <img src="${data.image}" alt="${data.title}" class="cp-article-image">
+                            <img src="${proxied || data.image}" alt="${data.title}" class="cp-article-image">
                             <div class="cp-article-content">
                                 <div class="cp-article-tags">
                                     <span class="cp-article-tag ${categoryClass}">${categoryTag}</span>
