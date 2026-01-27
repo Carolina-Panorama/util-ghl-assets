@@ -143,9 +143,12 @@
                 const authorElement = doc.querySelector('.blog-author-name, [itemprop="author"]');
                 const author = authorElement?.textContent?.trim() || 'Carolina Panorama';
                 
-                // Extract date
-                const dateElement = doc.querySelector('[itemprop="datePublished"], time');
-                const dateStr = dateElement?.getAttribute('datetime') || dateElement?.textContent;
+                // Extract date - prioritize article:published_time meta tag
+                let dateStr = doc.querySelector('meta[property="article:published_time"]')?.getAttribute('content');
+                if (!dateStr) {
+                    const dateElement = doc.querySelector('[itemprop="datePublished"], time');
+                    dateStr = dateElement?.getAttribute('datetime') || dateElement?.textContent;
+                }
                 const date = dateStr ? new Date(dateStr) : new Date();
                 
                 // Extract categories/tags
