@@ -234,38 +234,51 @@
 </div>
 
     <script>
-        (function() {
-            // Read GHL custom value (comma-separated list) and populate window.TOP_ARTICLES
-            (function readGHLTopArticles() {
-                try {
-                    const el = document.getElementById('GHL_TOP_ARTICLES');
-                    if (!el) return;
-                    const raw = (el.textContent || '').trim();
-                    if (!raw) return;
-
-                    // Expecting comma-separated list like: id1,id2,id3
-                    const items = raw.split(/,|\r?\n/).map(s => s.trim()).filter(Boolean);
-                    if (items.length) {
-                        window.TOP_ARTICLES = items;
-                    }
-                } catch (e) {
-                    console.error('Error reading GHL_TOP_ARTICLES:', e);
-                }
-            })();
-
-            // Wait for TOP_ARTICLES to be available
-            function waitForArticles(callback, timeout = 5000) {
-                const startTime = Date.now();
-                const checkInterval = setInterval(() => {
-                    if (window.TOP_ARTICLES && window.TOP_ARTICLES.length >= 5) {
-                        clearInterval(checkInterval);
-                        callback();
-                    } else if (Date.now() - startTime > timeout) {
-                        clearInterval(checkInterval);
-                        console.error('TOP_ARTICLES not found or has fewer than 5 articles');
-                    }
-                }, 50);
+    // Wait for CarolinaPanorama global before running widget logic
+    function waitForCarolinaPanorama(callback, timeout = 5000) {
+        const start = Date.now();
+        (function check() {
+            if (window.CarolinaPanorama) {
+                callback();
+            } else if (Date.now() - start < timeout) {
+                setTimeout(check, 30);
+            } else {
+                console.error('CarolinaPanorama global not found.');
             }
+        })();
+    }
+
+    waitForCarolinaPanorama(function() {
+        // Read GHL custom value (comma-separated list) and populate window.TOP_ARTICLES
+        (function readGHLTopArticles() {
+            try {
+                const el = document.getElementById('GHL_TOP_ARTICLES');
+                if (!el) return;
+                const raw = (el.textContent || '').trim();
+                if (!raw) return;
+                // Expecting comma-separated list like: id1,id2,id3
+                const items = raw.split(/,|\r?\n/).map(s => s.trim()).filter(Boolean);
+                if (items.length) {
+                    window.TOP_ARTICLES = items;
+                }
+            } catch (e) {
+                console.error('Error reading GHL_TOP_ARTICLES:', e);
+            }
+        })();
+
+        // Wait for TOP_ARTICLES to be available
+        function waitForArticles(callback, timeout = 5000) {
+            const startTime = Date.now();
+            const checkInterval = setInterval(() => {
+                if (window.TOP_ARTICLES && window.TOP_ARTICLES.length >= 5) {
+                    clearInterval(checkInterval);
+                    callback();
+                } else if (Date.now() - startTime > timeout) {
+                    clearInterval(checkInterval);
+                    console.error('TOP_ARTICLES not found or has fewer than 5 articles');
+                }
+            }, 50);
+        }
 
         // Use global CarolinaPanorama helpers
         const fetchArticleMetadata = window.CarolinaPanorama.fetchArticleMetadata;
@@ -286,7 +299,7 @@
             const proxyWidth = idx === 0 ? 1200 : 600;
             const proxied = proxiedLeadConnectorUrl(data.image, proxyWidth);
 
-             image.addEventListener('load', () => {
+            image.addEventListener('load', () => {
                 image.classList.remove('is-loading');
             }, { once: true })
             image.src = proxied || data.image;
@@ -336,5 +349,5 @@
         waitForArticles(() => {
             initializeGrid();
         });
-    })();
+    });
 </script>
