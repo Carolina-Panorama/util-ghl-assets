@@ -1,23 +1,6 @@
-/* Shared Article Card Styles for Carolina Panorama
-Include this in pages that display article cards to ensure consistent styling */
+/* Shared styling for Carolina Panorama
 
 /* SITE-WIDE IMPROVEMENTS */
-
-/* Force consistent system font stack everywhere - overrides GHL defaults */
-body,
-html,
-.cp-article-card,
-.cp-article-title,
-.cp-article-description,
-.cp-article-meta,
-.cp-article-tag,
-.blog-post,
-.blog-content,
-article,
-h1, h2, h3, h4, h5, h6,
-p, span, div {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
-}
 
 /* Responsive typography with clamp() for natural scaling - 20% smaller */
 body {
