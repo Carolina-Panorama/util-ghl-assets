@@ -92,9 +92,30 @@
     </div>
 </div>
 
-<script>
+    <!-- GHL-provided editors picks key (comma-separated list). Replace via GHL template: {{custom_values.editors_picks}} -->
+    <script id="GHL_EDITORS_PICKS" type="text/plain">{{custom_values.editors_picks}}</script>
+
+    <script>
     (function() {
         const track = document.getElementById('trending-track');
+
+        // Read GHL custom value (comma-separated list) and populate window.TRENDING_ARTICLES
+        (function readGHLEditorsPicks() {
+            try {
+                const el = document.getElementById('GHL_EDITORS_PICKS');
+                if (!el) return;
+                const raw = (el.textContent || '').trim();
+                if (!raw) return;
+
+                // Expecting comma-separated list like: id1,id2,id3
+                const items = raw.split(/,|\r?\n/).map(s => s.trim()).filter(Boolean);
+                if (items.length) {
+                    window.TRENDING_ARTICLES = items;
+                }
+            } catch (e) {
+                console.error('Error reading GHL_EDITORS_PICKS:', e);
+            }
+        })();
 
         // Wait for TRENDING_ARTICLES to be available
         function waitForArticles(callback, timeout = 5000) {
