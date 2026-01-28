@@ -59,7 +59,8 @@
     // Check for tag
     else if (urlPath.match(/\/tag\/([^\/]+)/)) {
         const tagMatch = urlPath.match(/\/tag\/([^\/]+)/);
-        const tagSlug = tagMatch[1];
+        let tagSlug = tagMatch[1];
+        tagSlug = decodeURIComponent(tagSlug);
         // Format tag: replace dashes with spaces and capitalize
         const tagName = tagSlug.replace(/-/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
         titleElement.textContent = `Tag: ${tagName}`;

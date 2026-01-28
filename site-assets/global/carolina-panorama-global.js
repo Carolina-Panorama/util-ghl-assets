@@ -143,7 +143,9 @@
         ];
         // Only one of tag or categoryUrlSlug can be used
         if (tag && !categoryUrlSlug) {
-            params.push(`tag=${encodeURIComponent(tag)}`);
+            // If tag is an array, join with comma, else use as is
+            const tagValue = Array.isArray(tag) ? tag.join(',') : tag;
+            params.push(`tag=${encodeURIComponent(tagValue)}`);
         } else if (categoryUrlSlug && !tag) {
             params.push(`categoryUrlSlug=${encodeURIComponent(categoryUrlSlug)}`);
         }

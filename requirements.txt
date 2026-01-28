@@ -1,8 +1,10 @@
 # Requirements for GHL Assets Helper Scripts
 
 # Article Import CSV Generator
-python-docx>=0.8.11
-spacy>=3.7.0
+python-docx
+spacy
+python-dotenv
+requests
 
 # After installing requirements, download spaCy language model:
 # python -m spacy download en_core_web_sm

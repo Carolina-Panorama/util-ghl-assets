@@ -1,0 +1,78 @@
+<style>
+ .bubble-checkbox-container {
+     width: 100% !important;
+ }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Find the Select All checkbox by label text
+  const selectAll = Array.from(document.querySelectorAll('label')).find(label =>
+    /select\s*\/\s*deselect all/i.test(label.textContent)
+  )?.querySelector('input[type="checkbox"]');
+  if (!selectAll) return;
+  selectAll.addEventListener('change', function() {
+    document.querySelectorAll('.bubble-checkbox input[type="checkbox"]').forEach(cb => {
+      cb.checked = selectAll.checked;
+    });
+  });
+  // If any box is unchecked, uncheck Select All
+  // Find the first .flex-col div that contains .bubble-checkboxes
+  let list = null;
+  const flexCols = document.querySelectorAll('.flex-col div');
+  for (const div of flexCols) {
+    if (div.querySelector('.bubble-checkbox-label, .bubble-checkbox')) {
+      list = div;
+      break;
+    }
+  }
+  if (!list) return;
+  list.addEventListener('change', function() {
+    const all = document.querySelectorAll('.bubble-checkbox input[type="checkbox"]');
+    const checked = document.querySelectorAll('.bubble-checkbox input[type="checkbox"]:checked');
+    selectAll.checked = all.length === checked.length && all.length > 0;
+  });
+});
+function waitForCategoryListAndInit(timeout = 10000) {
+  const start = Date.now();
+  (function poll() {
+    // Find the Select All checkbox by label text
+    const selectAll = Array.from(document.querySelectorAll('label')).find(label =>
+      /select\s*\/\s*deselect all/i.test(label.textContent)
+    )?.querySelector('input[type="checkbox"]');
+    // Find the first .flex-col div that contains .bubble-checkboxes
+    let list = null;
+    const flexCols = document.querySelectorAll('.flex-col div');
+    for (const div of flexCols) {
+      if (div.querySelector('.bubble-checkbox-label, .bubble-checkbox')) {
+        list = div;
+        break;
+      }
+    }
+    if (selectAll && list) {
+      // Attach event listeners
+      selectAll.addEventListener('change', function() {
+        document.querySelectorAll('.bubble-checkbox input[type="checkbox"]').forEach(cb => {
+          cb.checked = selectAll.checked;
+        });
+      });
+      list.addEventListener('change', function() {
+        const all = document.querySelectorAll('.bubble-checkbox input[type="checkbox"]');
+        const checked = document.querySelectorAll('.bubble-checkbox input[type="checkbox"]:checked');
+        selectAll.checked = all.length === checked.length && all.length > 0;
+      });
+    } else if (Date.now() - start < timeout) {
+      setTimeout(poll, 100);
+    } else {
+      console.error('Could not find category list or Select All checkbox.');
+    }
+  })();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  waitForCategoryListAndInit();
+});
+</script>
+
+
+
