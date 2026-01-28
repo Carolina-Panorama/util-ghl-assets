@@ -156,7 +156,7 @@
             const data = await response.json();
             if (!data.blogPosts || !Array.isArray(data.blogPosts)) return [];
             return data.blogPosts.map(post => ({
-                url: post.canonicalLink,
+                url: post.canonicalLink || (post.urlSlug ? `/post/${post.urlSlug}` : ''),
                 title: post.title,
                 description: post.description,
                 image: post.imageUrl,

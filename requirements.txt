@@ -5,6 +5,7 @@ python-docx
 spacy
 python-dotenv
 requests
+bs4
 
 # After installing requirements, download spaCy language model:
 # python -m spacy download en_core_web_sm

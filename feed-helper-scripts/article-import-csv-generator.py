@@ -65,11 +65,80 @@ def extract_html_from_word(word_path, tmp_dir):
         return '', []
     with open(html_path, 'r', encoding='utf-8', errors='ignore') as f:
         html = f.read()
-    # For meta/description/tags, extract plain text (optional: use BeautifulSoup)
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(html, 'html.parser')
-    text_paragraphs = [p.get_text(strip=True) for p in soup.find_all(['p', 'h1', 'h2', 'h3'])]
-    return html, text_paragraphs
+    # Only use the contents of the <body> tag if present
+    body = soup.body
+    if body:
+        content_soup = BeautifulSoup(str(body), 'html.parser')
+        body.unwrap()  # Remove the <body> tag itself
+    else:
+        content_soup = soup
+    # Remove all <style> tags, unwrap <font> tags, and remove inline style attributes
+    for style_tag in content_soup.find_all('style'):
+        style_tag.decompose()
+    for font_tag in content_soup.find_all('font'):
+        font_tag.unwrap()
+    for tag in content_soup.find_all(True):
+        if tag.has_attr('style'):
+            del tag['style']
+        if tag.has_attr('face'):
+            del tag['face']
+        if tag.has_attr('size'):
+            del tag['size']
+        if tag.has_attr('align'):
+            del tag['align']
+    # Remove the first heading (title) if present, else use the first <p> as the title
+    title_text = None
+    import re
+    first_heading = content_soup.find(['h1', 'h2', 'h3'])
+    if first_heading:
+        # Use separator=' ' to insert a space for each tag boundary
+        raw_title = first_heading.get_text(separator=' ', strip=True)
+        # Collapse all whitespace to a single space
+        title_text = re.sub(r'\s+', ' ', raw_title).strip()
+        first_heading.decompose()
+    else:
+        first_para = content_soup.find('p')
+        if first_para:
+            raw_title = first_para.get_text(separator=' ', strip=True)
+            title_text = re.sub(r'\s+', ' ', raw_title).strip()
+            first_para.decompose()
+    
+
+    # Attempt to extract author from the first 3 <p> tags after title removal
+    author_name = None
+    import re
+    p_tags = content_soup.find_all('p', limit=3)
+    for p in p_tags:
+        para_text = p.get_text(separator=' ', strip=True)
+        # Match patterns like 'By John Doe', 'by: Jane Smith', etc.
+        match = re.match(r'by[:\s]+([\w\-\'\"\.\s]+)', para_text, re.IGNORECASE)
+        if match:
+            # Normalize whitespace and strip
+            author_name = re.sub(r'\s+', ' ', match.group(1)).strip(' .,:;\'\"')
+            p.decompose()
+            break
+
+    # Remove empty <p> tags
+    for p in content_soup.find_all('p'):
+        if not p.get_text(strip=True):
+            p.decompose()
+
+    # Get cleaned HTML
+    cleaned_html = str(content_soup)
+    # Write beautified HTML for debugging
+    try:
+        pretty_html = content_soup.prettify()
+        base_name = os.path.splitext(os.path.basename(word_path))[0]
+        beautified_path = os.path.join(tmp_dir, base_name + '.beautified.html')
+        with open(beautified_path, 'w', encoding='utf-8') as f:
+            f.write(pretty_html)
+    except Exception as e:
+        print(f"Could not write beautified HTML: {e}")
+    # For meta/description/tags, extract plain text
+    text_paragraphs = [p.get_text(strip=True) for p in content_soup.find_all(['p', 'h1', 'h2', 'h3'])]
+    return cleaned_html, text_paragraphs, title_text, author_name
 
 
 def find_matching_images(article_name, image_files, match_length=10):
@@ -123,33 +192,47 @@ def process_directory(input_dir, output_csv, ghl_parent_id=None, category_value=
     try:
         for docx_file in docx_files:
             article_name = docx_file.stem
+            # Skip files whose name ends with 'caption' (case-insensitive)
+            if article_name.lower().endswith('caption'):
+                print(f"Skipping file ending with 'Caption': {docx_file}")
+                continue
             print(f"\nProcessing: {article_name}")
-            html_content, paragraphs = extract_html_from_word(str(docx_file), tmp_dir)
-            title = paragraphs[0] if paragraphs else article_name
-            matching_images = find_matching_images(article_name, image_files)
-            # Upload and get GHL URL for the first matching image
-            if matching_images:
-                img_path = matching_images[0]
-                if img_path not in uploaded_images:
-                    try:
-                        img_size = os.path.getsize(img_path)
-                        print(f"Uploading image: {img_path} ({img_size} bytes)...")
-                    except Exception as e:
-                        print(f"Could not get size for {img_path}: {e}")
-                        img_size = 'unknown'
-                    ghl_url = ghl_api.upload_media(img_path, parent_id=ghl_parent_id)
-                    print(f"Upload result for {img_path}: {ghl_url}")
-                    uploaded_images[img_path] = ghl_url['url'] if ghl_url and 'url' in ghl_url else Path(img_path).name
-                else:
-                    print(f"Image already uploaded this run: {img_path}")
-                featured_image = uploaded_images[img_path]
+            html_content, paragraphs, title_text, extracted_author = extract_html_from_word(str(docx_file), tmp_dir)
+            import re
+            if title_text:
+                # Remove newlines and collapse multiple spaces
+                clean_title = re.sub(r'\\s+', ' ', title_text).strip()
             else:
-                print(f"No matching images found for article: {article_name}")
-                featured_image = ""
+                clean_title = paragraphs[0] if paragraphs else article_name
+            title = clean_title
+            matching_images = find_matching_images(article_name, image_files)
+            featured_image = ""
+            if not getattr(process_directory, 'no_image_upload', False):
+                # Upload and get GHL URL for the first matching image
+                if matching_images:
+                    img_path = matching_images[0]
+                    if img_path not in uploaded_images:
+                        try:
+                            img_size = os.path.getsize(img_path)
+                            print(f"Uploading image: {img_path} ({img_size} bytes)...")
+                        except Exception as e:
+                            print(f"Could not get size for {img_path}: {e}")
+                            img_size = 'unknown'
+                        ghl_url = ghl_api.upload_media(img_path, parent_id=ghl_parent_id)
+                        print(f"Upload result for {img_path}: {ghl_url}")
+                        uploaded_images[img_path] = ghl_url['url'] if ghl_url and 'url' in ghl_url else Path(img_path).name
+                    else:
+                        print(f"Image already uploaded this run: {img_path}")
+                    featured_image = uploaded_images[img_path]
+                else:
+                    print(f"No matching images found for article: {article_name}")
+            else:
+                if matching_images:
+                    print(f"(No upload) Would use image: {matching_images[0]}")
             print(f"  - Title: {title[:50]}...")
             print(f"  - Content length: {len(html_content)} chars")
             print(f"  - Matching images: {len(matching_images)}")
-            if matching_images:
+            if matching_images and not getattr(process_directory, 'no_image_upload', False):
                 print(f"    - Featured: {Path(matching_images[0]).name}")
             meta_desc = paragraphs[2][:160] if len(paragraphs) > 2 else (paragraphs[1][:160] if len(paragraphs) > 1 else title[:160])
             full_text = ' '.join(paragraphs)
@@ -162,21 +245,41 @@ def process_directory(input_dir, output_csv, ghl_parent_id=None, category_value=
                 publish_date = get_next_sunday(file_date).strftime('%Y-%m-%d')
             else:
                 publish_date = ''
+            # Generate URL slug from title: remove articles/prepositions, normalize, limit to 72 chars
+            def normalize_slug(text):
+                import re
+                # List of articles and common prepositions to remove
+                stopwords = set([
+                    'a', 'an', 'the', 'and', 'but', 'or', 'nor', 'for', 'so', 'yet',
+                    'at', 'by', 'in', 'of', 'on', 'to', 'up', 'with', 'as', 'from', 'into', 'like', 'near', 'off', 'over', 'past', 'per', 'than', 'till', 'upon', 'via', 'with', 'without', 'about', 'after', 'against', 'along', 'among', 'around', 'before', 'behind', 'below', 'beneath', 'beside', 'between', 'beyond', 'during', 'except', 'inside', 'onto', 'outside', 'since', 'through', 'toward', 'under', 'underneath', 'until', 'within', 'without'
+                ])
+                # Remove punctuation, lowercase, split int words
+                words = re.sub(r'[^a-z0-9\- ]+', '', text.lower()).split()
+                # Remove stopwords
+                filtered = [w for w in words if w not in stopwords]
+                # Join with hyphens
+                slug = '-'.join(filtered)
+                # Collapse multiple hyphens
+                slug = re.sub(r'-+', '-', slug)
+                # Truncate to 72 chars, strip trailing hyphens
+                return slug[:72].rstrip('-')
+            url_slug = normalize_slug(title)
             article = {
-                'URL Slug': '',
+                'URL Slug': url_slug,
                 'Publish Date': publish_date,
                 'Scheduled Date': '',
                 'Blog Post Title': title,
                 'Meta description': meta_desc,
                 'Meta Image': featured_image,
                 'Meta Image Alt text': title,
-                'Author': author_value or '',
+                'Author': (extracted_author if extracted_author else (author_value or '')),
                 'Category ': category_value or '',
                 'Blog Post Tags': entity_tags,
                 'Blog Post Content': html_content
             }
             articles.append(article)
     finally:
+        pass
         if os.path.exists(tmp_dir):
             shutil.rmtree(tmp_dir, ignore_errors=True)
     
@@ -227,6 +330,7 @@ def main():
         description='Generate CSV for bulk article import from Word docs and images'
     )
     parser.add_argument('input', help='Input directory or zip file')
+    parser.add_argument('--no-image-upload', action='store_true', help='Do not upload images, leave Meta Image empty (for testing)')
     parser.add_argument('-o', '--output', default='articles_import.csv',
                        help='Output CSV file path')
     parser.add_argument('-m', '--match-length', type=int, default=10,
@@ -240,8 +344,9 @@ def main():
     args = parser.parse_args()
     
     input_path = Path(args.input)
-    # Set the publish_date_mode as an attribute for process_directory
+    # Set the publish_date_mode and no_image_upload as attributes for process_directory
     process_directory.publish_date_mode = args.publish_date
+    process_directory.no_image_upload = args.no_image_upload
     if not input_path.exists():
         print(f"Error: {input_path} does not exist")
         return
