@@ -237,7 +237,7 @@ waitForCarolinaPanorama(function() {
             url: post.canonicalLink || (post.urlSlug ? `/post/${post.urlSlug}` : ''),
             title: post.title,
             description: post.description,
-            image: post.imageUrl,
+            image: post.imageUrl || "https://storage.googleapis.com/msgsndr/9Iv8kFcMiUgScXzMPv23/media/697bd8644d56831c95c3248d.svg",
             author: post.author?.name || 'Unknown',
             date: post.publishedAt,
             categories: Array.isArray(post.categories) && post.categories.length > 0

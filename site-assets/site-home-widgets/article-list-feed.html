@@ -179,7 +179,7 @@ waitForCarolinaPanorama(function() {
             <div class="article-list-item">
                 <article class="cp-article-card">
                     <a href="${data.url}" class="cp-article-card-link">
-                        <img src="${proxied || data.image}" alt="${data.title}" class="cp-article-image">
+                        <img src="${proxied || data.image || 'https://storage.googleapis.com/msgsndr/9Iv8kFcMiUgScXzMPv23/media/697bd8644d56831c95c3248d.svg'}" alt="${data.title}" class="cp-article-image">
                         <div class="cp-article-content">
                             <h2 class="cp-article-title">${data.title}</h2>
                             <div class="cp-article-meta">
