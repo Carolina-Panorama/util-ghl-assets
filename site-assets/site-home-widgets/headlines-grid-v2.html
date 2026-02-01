@@ -173,6 +173,7 @@
                         </div>
                         <h3 class="cp-article-title">Loading...</h3>
                         <div class="cp-article-meta">
+                            <span class="cp-article-author">Carolina Panorama</span>
                             <span class="cp-article-date">Today</span>
                         </div>
                     </div>
@@ -190,6 +191,7 @@
                         </div>
                         <h3 class="cp-article-title">Loading...</h3>
                         <div class="cp-article-meta">
+                            <span class="cp-article-author">Carolina Panorama</span>
                             <span class="cp-article-date">Today</span>
                         </div>
                     </div>
@@ -207,6 +209,7 @@
                         </div>
                         <h3 class="cp-article-title">Loading...</h3>
                         <div class="cp-article-meta">
+                            <span class="cp-article-author">Carolina Panorama</span>
                             <span class="cp-article-date">Today</span>
                         </div>
                     </div>
@@ -224,6 +227,7 @@
                         </div>
                         <h3 class="cp-article-title">Loading...</h3>
                         <div class="cp-article-meta">
+                            <span class="cp-article-author">Carolina Panorama</span>
                             <span class="cp-article-date">Today</span>
                         </div>
                     </div>
@@ -325,12 +329,20 @@
             title.textContent = data.title;
             
             const meta = linkElement.querySelector('.cp-article-meta');
-            const authorSpan = meta.querySelector('.cp-article-author');
+            // Always update author span if present, otherwise insert it before date
+            let authorSpan = meta.querySelector('.cp-article-author');
+            const dateSpan = meta.querySelector('.cp-article-date');
+            if (!authorSpan && dateSpan) {
+                authorSpan = document.createElement('span');
+                authorSpan.className = 'cp-article-author';
+                meta.insertBefore(authorSpan, dateSpan);
+            }
             if (authorSpan) {
                 authorSpan.textContent = data.author;
             }
-            const dateSpan = meta.querySelector('.cp-article-date');
-            dateSpan.textContent = formatDate(data.date);
+            if (dateSpan) {
+                dateSpan.textContent = formatDate(data.date);
+            }
             
             const description = linkElement.querySelector('.cp-article-description');
             if (description && data.description) {
