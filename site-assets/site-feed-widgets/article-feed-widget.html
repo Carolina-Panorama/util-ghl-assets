@@ -177,11 +177,17 @@
         padding: 20px 40px;
     }
     
-    /* Latest/All state - simple clean look */
-    #category-header-container.latest-header .header-title {
+    /* Latest/All state - keep original styling */
+    #category-header-container.latest-header #category-title {
+        font-size: 2.5rem;
+        font-weight: 700;
         color: #1a202c;
-        padding-bottom: 16px;
+        margin: 0;
+        padding-bottom: 20px;
         border-bottom: 3px solid #2563eb;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        font-family: 'Georgia', serif;
     }
 </style>
 
@@ -347,29 +353,39 @@ waitForCarolinaPanorama(function() {
         const { articles, categoryDetails, authorDetails } = await fetchArticles(page);
         renderArticles(articles);
         renderPagination(page, totalCount);
-        // Build header label
-        let header = '';
-        if (categoryDetails && categoryDetails.label) {
-            header = `Category: ${categoryDetails.label}`;
-        }
-        // If tag filter is present in URL, show it
+        
+        // Update header with stylized states
+        const headerContainer = document.getElementById('category-header-container');
+        const headerTitle = document.getElementById('category-title');
         const filter = getFilterFromUrl();
-        if (filter.tag) {
-            if (header) header += ' | ';
-            header += `Tag: ${filter.tag}`;
-        }
-        // If author filter is present, show author name from authorDetails
-        if (filter.author) {
+        
+        // Reset classes
+        headerContainer.className = '';
+        
+        if (categoryDetails && categoryDetails.label) {
+            // Category state - use cp-article-tag class with category name
+            const categoryClass = categoryDetails.label.toLowerCase().replace(/\s+/g, '-');
+            headerContainer.className = 'cp-article-tag ' + categoryClass;
+            headerTitle.innerHTML = `<span class="header-title">${categoryDetails.label}</span>`;
+        } else if (filter.tag) {
+            // Tag state - Carolina Navy Blue box with label
+            headerContainer.className = 'tag-header';
+            headerTitle.innerHTML = `<span class="header-label">Tagged Entity</span><span class="header-title">${filter.tag}</span>`;
+        } else if (filter.author) {
+            // Author state - Carolina Navy Blue box with label
             let authorName = 'Unknown Author';
-            console.log('authorDetails:', authorDetails);
             if (authorDetails && authorDetails.name) {
                 authorName = authorDetails.name;
             }
-            header = `Author: ${authorName}`;
+            headerContainer.className = 'author-header';
+            headerTitle.innerHTML = `<span class="header-label">Written by:</span><span class="header-title">${authorName}</span>`;
+        } else {
+            // Latest Articles - keep original style
+            headerContainer.className = 'latest-header';
+            headerTitle.textContent = 'Latest Articles';
         }
-        if (!header) header = 'Latest Articles';
-        categoryLabelDiv.textContent = header;
-        categoryLabelDiv.style.display = '';
+        
+        headerContainer.style.display = '';
     }
 
     // Initial load
