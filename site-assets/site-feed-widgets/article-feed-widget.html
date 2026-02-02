@@ -121,6 +121,7 @@
         justify-content: center;
         transition: background 0.2s;
     }
+
     .article-feed-pagination button:disabled {
         background: #e5e7eb;
         color: #9ca3af;
@@ -131,52 +132,56 @@
         text-align: center;
         font-size: 2.5rem;
         font-weight: 700;
-        #category-header-container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          margin: 40px 0 20px 0;
-        }
-        #category-header-container .header-label {
-          font-size: 0.95rem;
-          font-weight: 500;
-          letter-spacing: 0.5px;
-          margin-bottom: 4px;
-          color: #fff;
-          opacity: 0.85;
-          display: block;
-        }
-        #category-header-container.tag-header,
-        #category-header-container.author-header {
-          background: #003366;
-          border-radius: 12px;
-          padding: 18px 32px 12px 32px;
-          color: #fff;
-          margin-bottom: 24px;
-        }
-        #category-header-container .header-title {
-          margin: 0;
-          font-size: 2.2rem;
-          font-weight: 700;
-          color: #fff;
-          text-transform: uppercase;
-          letter-spacing: 1px;
-          font-family: 'Georgia', serif;
-        }
-        #category-header-container.cp-article-tag {
-          border-radius: 12px;
-          padding: 18px 32px 12px 32px;
-          color: #fff;
-          margin-bottom: 24px;
-        }
-    <div class="article-list-container" id="article-feed-container">
-        <!-- Articles will be rendered here -->
+    }
+
+    #category-header-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 40px 0 20px 0;
+    }
+    #category-header-container .header-label {
+        font-size: 0.95rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+        color: #fff;
+        opacity: 0.85;
+        display: block;
+    }
+    #category-header-container.tag-header,
+    #category-header-container.author-header {
+        background: #003366;
+        border-radius: 12px;
+        padding: 18px 32px 12px 32px;
+        color: #fff;
+        margin-bottom: 24px;
+    }
+    #category-header-container .header-title {
+        margin: 0;
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #fff;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-family: 'Georgia', serif;
+    }
+    #category-header-container.cp-article-tag {
+        border-radius: 12px;
+        padding: 18px 32px 12px 32px;
+        color: #fff;
+        margin-bottom: 24px;
+    }
+</style>
+
+<div class="article-list-container" id="article-feed-container">
+    <!-- Articles will be rendered here -->
+</div>
+    <div id="category-header-container">
+        <h1 id="category-title"></h1>
     </div>
-        <div id="category-header-container">
-            <h1 id="category-title"></h1>
-        </div>
-        <!-- Pagination buttons will be rendered here -->
-    </div>
+    <!-- Pagination buttons will be rendered here -->
+</div>
 </div>
 
 <script>
@@ -193,7 +198,6 @@ function waitForCarolinaPanorama(callback, timeout = 5000) {
         }
     })();
 }
-</style>
 
 waitForCarolinaPanorama(function() {
     const container = document.getElementById('article-feed-container');
@@ -358,4 +362,5 @@ waitForCarolinaPanorama(function() {
     // Initial load
     changePage(1);
 });
+
 </script>
