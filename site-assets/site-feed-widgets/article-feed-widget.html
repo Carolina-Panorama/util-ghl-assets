@@ -166,20 +166,33 @@
         display: block;
     }
     
-    /* Tag and Author states - Carolina Navy Blue background */
+    /* Tag and Author states - Carolina Navy Blue background with gradient */
     #category-header-container.tag-header,
     #category-header-container.author-header {
-        background: #003366;
+        background: linear-gradient(to bottom, #0055aa, #003366);
         color: #fff;
         border-radius: 12px;
         padding: 20px 40px;
     }
     
-    /* Category state - uses existing cp-article-tag colors */
+    /* Category state - uses existing cp-article-tag colors with gradient */
     #category-header-container.cp-article-tag {
         color: #fff;
         border-radius: 12px;
         padding: 20px 40px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    #category-header-container.cp-article-tag::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to bottom, rgba(255,255,255,0.15), rgba(0,0,0,0.2));
+        pointer-events: none;
     }
     
     /* Latest/All state - keep original styling */
