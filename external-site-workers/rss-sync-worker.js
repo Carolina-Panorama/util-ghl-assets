@@ -7,71 +7,85 @@
 // - ALGOLIA_ADMIN_API_KEY: Your Algolia Admin API Key (keep secret!)
 // - ALGOLIA_INDEX_NAME: Your index name (e.g., "posts" or "articles")
 // - RSS_FEED_URL: Your GHL RSS feed URL
-// - RSS_SYNC_KV: KV namespace binding for storing last-modified info
+// - RSS_SYNC_KV: KV namespace binding for storing last-modified info and batch progress
+// - BATCH_SIZE: Number of articles to process per run (default: 50)
 
 // Cron trigger: 0 */6 * * * (runs at 00:00, 06:00, 12:00, 18:00 UTC)
+
+const DEFAULT_BATCH_SIZE = 50;
 
 export default {
   async scheduled(event, env, ctx) {
     console.log('RSS sync started at', new Date().toISOString());
     
     try {
-      // Fetch RSS feed with conditional headers
+      const batchSize = env.BATCH_SIZE || DEFAULT_BATCH_SIZE;
+      
+      // Check if reset flag is set in KV
+      const resetFlag = env.RSS_SYNC_KV ? await env.RSS_SYNC_KV.get('reset-flag') : null;
+      if (resetFlag === 'true') {
+        console.log('Reset flag detected - clearing processed articles list');
+        if (env.RSS_SYNC_KV) {
+          await env.RSS_SYNC_KV.delete('processed-guids');
+          await env.RSS_SYNC_KV.delete('reset-flag'); // Clear the flag
+        }
+        console.log('Reset complete');
+      }
+      
+      // Fetch RSS feed (always fetch full feed to detect new articles)
       const rssUrl = env.RSS_FEED_URL || 'YOUR_RSS_FEED_URL_HERE';
       
-      // Get last known Last-Modified and ETag from KV storage
-      const lastModified = env.RSS_SYNC_KV ? await env.RSS_SYNC_KV.get('last-modified') : null;
-      const lastETag = env.RSS_SYNC_KV ? await env.RSS_SYNC_KV.get('etag') : null;
-      
-      const headers = {};
-      if (lastModified) {
-        headers['If-Modified-Since'] = lastModified;
-      }
-      if (lastETag) {
-        headers['If-None-Match'] = lastETag;
-      }
-      
-      const response = await fetch(rssUrl, { headers });
-      
-      // 304 Not Modified - feed hasn't changed
-      if (response.status === 304) {
-        console.log('RSS feed not modified, skipping sync');
-        return;
-      }
+      const response = await fetch(rssUrl);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch RSS feed: ${response.status}`);
       }
       
-      // Store new Last-Modified and ETag for next run
-      const newLastModified = response.headers.get('Last-Modified');
-      const newETag = response.headers.get('ETag');
-      
-      if (env.RSS_SYNC_KV) {
-        if (newLastModified) {
-          await env.RSS_SYNC_KV.put('last-modified', newLastModified);
-        }
-        if (newETag) {
-          await env.RSS_SYNC_KV.put('etag', newETag);
-        }
-      }
-      
-      console.log('RSS feed has been updated, processing...');
-      
       const xmlText = await response.text();
       
-      // Parse RSS feed
-      const articles = await parseRSS(xmlText);
-      console.log(`Parsed ${articles.length} articles from RSS feed`);
+      // Parse RSS feed to get all article GUIDs
+      const allArticleGuids = await parseRSSGuids(xmlText);
+      console.log(`Found ${allArticleGuids.length} total articles in RSS feed`);
       
-      if (articles.length === 0) {
+      if (allArticleGuids.length === 0) {
         console.log('No articles found in RSS feed');
         return;
       }
       
+      // Get list of already-processed article GUIDs from KV
+      const processedGuidsJson = env.RSS_SYNC_KV ? await env.RSS_SYNC_KV.get('processed-guids') : null;
+      const processedGuids = processedGuidsJson ? JSON.parse(processedGuidsJson) : [];
+      
+      console.log(`Already processed ${processedGuids.length} articles`);
+      
+      // Find articles that haven't been processed yet
+      const unprocessedGuids = allArticleGuids.filter(guid => !processedGuids.includes(guid));
+      
+      if (unprocessedGuids.length === 0) {
+        console.log('All articles already processed');
+        return;
+      }
+      
+      console.log(`Found ${unprocessedGuids.length} unprocessed articles`);
+      
+      // Process up to batchSize articles this run
+      const batchGuids = unprocessedGuids.slice(0, batchSize);
+      console.log(`Processing batch of ${batchGuids.length} articles`);
+      
+      // Parse full article data for this batch
+      const articles = await parseRSSBatch(xmlText, batchGuids);
+      console.log(`Parsed ${articles.length} articles with metadata`);
+      
       // Push to Algolia
       await pushToAlgolia(articles, env);
-      console.log('RSS sync completed successfully');
+      
+      // Mark these articles as processed
+      const newProcessedGuids = [...processedGuids, ...batchGuids];
+      if (env.RSS_SYNC_KV) {
+        await env.RSS_SYNC_KV.put('processed-guids', JSON.stringify(newProcessedGuids));
+      }
+      
+      console.log(`RSS sync completed. Processed ${batchGuids.length} articles. ${unprocessedGuids.length - batchGuids.length} remaining.`);
       
     } catch (error) {
       console.error('RSS sync failed:', error);
@@ -88,24 +102,48 @@ export default {
   }
 };
 
-// Parse RSS XML and extract article data
-async function parseRSS(xmlText) {
+// Quick parse to get just GUIDs from RSS feed
+async function parseRSSGuids(xmlText) {
+  const guids = [];
+  
+  const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+  const items = xmlText.matchAll(itemRegex);
+  
+  for (const match of items) {
+    const itemContent = match[1];
+    const link = extractTag(itemContent, 'link');
+    const guid = extractTag(itemContent, 'guid') || link;
+    
+    if (guid) {
+      guids.push(guid);
+    }
+  }
+  
+  return guids;
+}
+
+// Parse full article data for specific GUIDs
+async function parseRSSBatch(xmlText, guidsToProcess) {
   const articles = [];
   
-  // Simple regex-based XML parsing (works for standard RSS 2.0)
-  // For more complex XML, consider using a proper XML parser
   const itemRegex = /<item>([\s\S]*?)<\/item>/g;
   const items = xmlText.matchAll(itemRegex);
   
   for (const match of items) {
     const itemContent = match[1];
     
+    const link = extractTag(itemContent, 'link');
+    const guid = extractTag(itemContent, 'guid') || link;
+    
+    // Skip if not in this batch
+    if (!guidsToProcess.includes(guid)) {
+      continue;
+    }
+    
     // Extract fields
     const title = extractTag(itemContent, 'title');
-    const link = extractTag(itemContent, 'link');
     const description = extractTag(itemContent, 'description');
     const pubDate = extractTag(itemContent, 'pubDate');
-    const guid = extractTag(itemContent, 'guid') || link; // Use link as fallback
     
     // Optional: Extract category/tags
     const categories = extractAllTags(itemContent, 'category');

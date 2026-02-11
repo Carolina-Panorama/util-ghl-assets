@@ -1,117 +1,65 @@
 <script>
-function debugLog(...args) {
-  console.log('[CategoryWidget]', ...args);
-}
-
-async function fetchCategories() {
-  const baseUrl = 'https://backend.leadconnectorhq.com/blogs/categories?locationId=9Iv8kFcMiUgScXzMPv23';
-  const limit = 10;
-  let offset = 0;
-  let allCategories = [];
-  let seen = new Set();
-  let totalCount = null;
-  do {
-    const url = `${baseUrl}&limit=${limit}&offset=${offset}`;
-    try {
-      const res = await fetch(url);
-      const data = await res.json();
-      if (totalCount === null) totalCount = data.count || 0;
-      const newCats = (data.categories || []).filter(cat => {
-        if (!cat.urlSlug || seen.has(cat.urlSlug)) return false;
-        seen.add(cat.urlSlug);
-        return true;
-      });
-      allCategories = allCategories.concat(newCats);
-      offset += limit;
-      if (allCategories.length >= totalCount) break;
-    } catch (e) {
-      console.error('Failed to fetch categories:', e);
-      break;
-    }
-  } while (allCategories.length < (totalCount || 0));
-  debugLog('Fetched categories:', allCategories.length);
-  return allCategories;
-}
-
-function renderCategoryCheckboxes(categories, container) {
-  if (!container) return;
-  debugLog('Rendering checkboxes into', container, 'with', categories.length, 'categories');
-  container.innerHTML = '';
-  // Select/Deselect All
-  const selectAllId = 'select-all-categories';
-  const selectAllDiv = document.createElement('div');
-  selectAllDiv.classList = ["bubble-checkbox-label", "bubble-checkbox-container"];
-  selectAllDiv.innerHTML = `<div style="position:relative;display:inline-block;width:100%;" class="option-checkbox-bubble">
-        <div class="bubble-checkbox">
-            <label for="${selectAllId}" style="min-width: min(100%, 562px); max-width: 100%;" 
-                class="bubble-checkbox-label bubble-checkbox-container">
-            <input id="${selectAllId}" value="Select" type="checkbox" class="bubble-checkbox"> Select/Unselect All</label>
-        </div>
-    </div>`
-  container.appendChild(selectAllDiv);
-
-  // Category checkboxes
-  categories.forEach(cat => {
-    const id = `cat-${cat.urlSlug}`;
-    const div = document.createElement('div');
-    div.classList = ["bubble-checkbox-label", "bubble-checkbox-container"];
-    div.innerHTML = `<div style="position:relative;display:inline-block;width:100%;" class="option-checkbox-bubble">
-        <div class="bubble-checkbox">
-            <label for="${id}" style="min-width: min(100%, 562px); max-width: 100%;" 
-                class="bubble-checkbox-label bubble-checkbox-container">
-            <input id="${id}" value="${cat.urlSlug}" type="checkbox" class="bubble-checkbox">${cat.label}</label>
-        </div>
-    </div>`
-    container.appendChild(div);
-  });
-
-  // Select/Deselect All logic
-  const selectAll = document.getElementById(selectAllId);
-  selectAll.addEventListener('change', function() {
-    container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-      cb.checked = selectAll.checked;
-    });
-  });
-  container.addEventListener('change', function(e) {
-    if (e.target !== selectAll && e.target.type === 'checkbox') {
-      const all = Array.from(container.querySelectorAll('input[type="checkbox"]')).filter(cb => cb.id !== selectAllId);
-      const checked = all.filter(cb => cb.checked);
-      selectAll.checked = all.length === checked.length && all.length > 0;
-    }
-  });
-}
-
-// Call this function from your form loader after the custom element is present
-function injectNewsletterCategories() {
-  const container = document.querySelector('.form-builder--item .flex-col div')
+// Select/Deselect All functionality for newsletter category checkboxes
+function initCategorySelectAll() {
+  const container = document.querySelector('.form-builder--item .flex-col div');
   if (!container) {
-    debugLog('custom-categories element not found!');
+    console.warn('[CategoryWidget] Container not found');
     return;
   }
-  fetchCategories().then(categories => {
-    renderCategoryCheckboxes(categories, container);
-  });
-}
 
-function waitForCustomCategoriesAndInject(maxTries = 50, interval = 200) {
-  let tries = 0;
-  function tryInject() {
-    const container = document.querySelector('.bubble-checkbox-label.bubble-checkbox-container');
-    if (container) {
-      injectNewsletterCategories();
-    } else if (tries < maxTries) {
-      tries++;
-      setTimeout(tryInject, interval);
-    } else {
-      console.warn('custom-categories element not found after max retries.');
+  // Find the Select/Deselect All checkbox by its label text
+  let selectAllCheckbox = null;
+  const allCheckboxes = container.querySelectorAll('input[type="checkbox"][data-q="section-selection"]');
+  
+  for (const cb of allCheckboxes) {
+    const label = cb.closest('label');
+    if (label && label.textContent.includes('Select/Unselect All')) {
+      selectAllCheckbox = cb;
+      break;
     }
   }
-  tryInject();
+
+  if (!selectAllCheckbox) {
+    console.warn('[CategoryWidget] Select/Unselect All checkbox not found');
+    return;
+  }
+
+  // Get all category checkboxes (excluding the select all)
+  const checkboxes = Array.from(allCheckboxes).filter(cb => cb !== selectAllCheckbox);
+  
+  if (checkboxes.length === 0) {
+    console.warn('[CategoryWidget] No category checkboxes found');
+    return;
+  }
+
+  // Handle select all toggle
+  selectAllCheckbox.addEventListener('change', function() {
+    checkboxes.forEach(cb => {
+      cb.checked = selectAllCheckbox.checked;
+      cb.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  });
+
+  // Update select all state when individual checkboxes change
+  checkboxes.forEach(cb => {
+    cb.addEventListener('change', function() {
+      const allChecked = checkboxes.every(c => c.checked);
+      const noneChecked = checkboxes.every(c => !c.checked);
+      
+      if (allChecked) {
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+      } else if (noneChecked) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+      } else {
+        selectAllCheckbox.indeterminate = true;
+      }
+    });
+  });
+
+  console.log('[CategoryWidget] Select all initialized with', checkboxes.length, 'category checkboxes');
 }
 
-// Usage: call this once, e.g. at the end of your form loader script
-waitForCustomCategoriesAndInject();
+initCategorySelectAll();
 </script>
-
-
-

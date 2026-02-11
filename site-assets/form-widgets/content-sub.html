@@ -1,0 +1,70 @@
+<div id="widget-container">
+    <div id="editor"></div>
+</div>
+
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<style>
+    #editor {
+        height: 200px;
+        border-radius: 10px; /* Round edges */
+        border: 1px solid #ccc; /* Border style */
+        padding: 5px; /* Padding inside the editor */
+        max-height: 300px; /* Maximum height */
+        overflow-y: auto; /* Scrollable */
+    }
+</style>
+
+<script>
+    const MAX_IMAGES = 3; // Set the maximum number of images
+    let imageCount = 0; // This will track the current number of images
+
+    const quill = new Quill('#editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline'], 
+                ['link', 'image']
+            ]
+        }
+    });
+
+    // Intercept image uploads
+    quill.getModule('toolbar').addHandler('image', function() {
+        if (imageCount >= MAX_IMAGES) {
+            alert('You can only insert a maximum of ' + MAX_IMAGES + ' images.');
+            return; // Stop execution if max images have been reached
+        }
+        
+        const range = quill.getSelection();
+        const fileInput = document.createElement('input');
+        fileInput.setAttribute('type', 'file');
+        fileInput.setAttribute('accept', 'image/*');
+        
+        fileInput.onchange = function() {
+            const file = fileInput.files[0];
+            if (file && file.size <= 2 * 1024 * 1024) { // 2 MB limit
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = e.target.result;
+                    quill.insertEmbed(range.index, 'image', img);
+                    imageCount++; // Increment the image counter
+                };
+                reader.readAsDataURL(file);
+            } else {
+                alert('Image size exceeds 2 MB limit.');
+            }
+        };
+        fileInput.click();
+    });
+
+    const destinationElement = document.querySelector('textarea[data-q="submission-content"]');
+    
+    // Add an event listener for the input event
+    quill.on('text-change', function() {
+        // Copy value from source to destination
+        console.log("tpying content to hidden input");
+        const letterContent = quill.root.innerHTML;
+        destinationElement.value = letterContent;
+    });
+</script>
