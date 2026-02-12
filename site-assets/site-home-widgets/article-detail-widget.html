@@ -1,0 +1,404 @@
+<!-- Article Detail Widget - Renders a full article page from CMS -->
+<!-- Requires carolina-panorama-global.js to be loaded on the page -->
+
+<style>
+  .article-detail-wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 16px 40px;
+  }
+
+  .article-detail-header {
+    margin-bottom: 16px;
+  }
+
+  .article-detail-title {
+    font-size: clamp(2rem, 3vw, 2.6rem);
+    line-height: 1.2;
+    font-weight: 700;
+    margin: 0 0 12px;
+    color: #111827;
+    font-family: 'Georgia', serif;
+  }
+
+  .article-detail-meta {
+    font-size: 0.95rem;
+    color: #6b7280;
+    margin-bottom: 12px;
+  }
+
+  .article-detail-meta a {
+    color: #2563eb;
+    text-decoration: none;
+  }
+
+  .article-detail-meta a:hover {
+    text-decoration: underline;
+  }
+
+  .article-detail-body {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: #111827;
+    margin: 20px 0 28px;
+  }
+
+  .article-detail-body p {
+    margin-bottom: 1.1em;
+  }
+
+  .article-detail-body h2,
+  .article-detail-body h3,
+  .article-detail-body h4 {
+    margin-top: 1.4em;
+    margin-bottom: 0.6em;
+  }
+
+  .article-tags-section {
+    border-top: 1px solid #e5e7eb;
+    padding-top: 16px;
+    margin-top: 8px;
+    margin-bottom: 24px;
+  }
+
+  .article-tags-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #4b5563;
+    margin-bottom: 8px;
+  }
+
+  .article-tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .article-tag-pill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1e3a8a;
+    font-size: 0.85rem;
+    text-decoration: none;
+    border: 1px solid #dbeafe;
+  }
+
+  .article-tag-pill:hover {
+    background: #dbeafe;
+  }
+
+  .article-author-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px 18px;
+    border-radius: 10px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 24px;
+  }
+
+  .article-author-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 999px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #6b7280;
+  }
+
+  .article-author-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .article-author-meta {
+    flex: 1;
+  }
+
+  .article-author-name {
+    font-weight: 700;
+    margin: 0 0 4px;
+  }
+
+  .article-author-name a {
+    color: #111827;
+    text-decoration: none;
+  }
+
+  .article-author-name a:hover {
+    color: #2563eb;
+  }
+
+  .article-author-bio {
+    font-size: 0.95rem;
+    color: #4b5563;
+    margin: 4px 0 8px;
+  }
+
+  .article-author-social {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 0.9rem;
+  }
+
+  .article-author-social a {
+    color: #2563eb;
+    text-decoration: none;
+  }
+
+  .article-author-social a:hover {
+    text-decoration: underline;
+  }
+
+  .article-back-to-top {
+    text-align: center;
+    margin-top: 12px;
+  }
+
+  .article-back-to-top button {
+    padding: 10px 22px;
+    border-radius: 999px;
+    border: 1px solid #d1d5db;
+    background: #f9fafb;
+    color: #111827;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+
+  .article-back-to-top button:hover {
+    background: #e5e7eb;
+  }
+
+  @media (max-width: 640px) {
+    .article-detail-wrapper {
+      padding: 16px 12px 32px;
+    }
+
+    .article-author-card {
+      flex-direction: row;
+      align-items: flex-start;
+    }
+  }
+</style>
+
+<div class="article-detail-wrapper" id="cp-article-detail">
+  <div class="article-detail-header">
+    <h1 class="article-detail-title" id="cp-article-title">Loading article...</h1>
+    <div class="article-detail-meta" id="cp-article-meta">Please wait while we load the content.</div>
+  </div>
+  <div class="article-detail-body" id="cp-article-body"></div>
+  <div class="article-tags-section" id="cp-article-tags-section" style="display:none;">
+    <div class="article-tags-label">Tags</div>
+    <div class="article-tags-list" id="cp-article-tags"></div>
+  </div>
+  <div class="article-author-card" id="cp-article-author-card" style="display:none;">
+    <div class="article-author-avatar" id="cp-article-author-avatar">
+      <span>CP</span>
+    </div>
+    <div class="article-author-meta">
+      <h3 class="article-author-name" id="cp-article-author-name"></h3>
+      <div class="article-author-bio" id="cp-article-author-bio"></div>
+      <div class="article-author-social" id="cp-article-author-social"></div>
+    </div>
+  </div>
+  <div class="article-back-to-top">
+    <button type="button" id="cp-back-to-top">Back to Top</button>
+  </div>
+</div>
+
+<script>
+  // Wait for CarolinaPanorama global before running widget logic
+  function waitForCarolinaPanorama(callback, timeout = 5000) {
+    const start = Date.now();
+    (function check() {
+      if (window.CarolinaPanorama) {
+        callback();
+      } else if (Date.now() - start < timeout) {
+        setTimeout(check, 30);
+      } else {
+        console.error('CarolinaPanorama global not found for article detail widget.');
+      }
+    })();
+  }
+
+  waitForCarolinaPanorama(function () {
+    const container = document.getElementById('cp-article-detail');
+    const titleEl = document.getElementById('cp-article-title');
+    const metaEl = document.getElementById('cp-article-meta');
+    const bodyEl = document.getElementById('cp-article-body');
+    const tagsSectionEl = document.getElementById('cp-article-tags-section');
+    const tagsListEl = document.getElementById('cp-article-tags');
+    const authorCardEl = document.getElementById('cp-article-author-card');
+    const authorAvatarEl = document.getElementById('cp-article-author-avatar');
+    const authorNameEl = document.getElementById('cp-article-author-name');
+    const authorBioEl = document.getElementById('cp-article-author-bio');
+    const authorSocialEl = document.getElementById('cp-article-author-social');
+    const backToTopBtn = document.getElementById('cp-back-to-top');
+
+    const apiBase = window.CarolinaPanorama.API_BASE_URL || 'https://cms.carolinapanorama.org';
+    // Path to your 404 page on the main site
+    const notFoundUrl = '/404-page';
+
+    function slugify(str) {
+      return String(str || '')
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-');
+    }
+
+    function getSlugFromPath() {
+      const path = window.location.pathname || '';
+      const match = path.match(/\/post\/([^/]+)/);
+      if (!match) return null;
+      return decodeURIComponent(match[1]);
+    }
+
+    function formatPublishDate(dateStr) {
+      if (!dateStr) return '';
+      try {
+        return new Date(dateStr).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+      } catch (e) {
+        return dateStr;
+      }
+    }
+
+    function renderCategories(categories, publishDate) {
+      const parts = [];
+      if (categories && categories.length) {
+        const catLinks = categories.map(cat => {
+          const name = cat.name || '';
+          const slug = slugify(name);
+          const href = `/article-feed/category/${encodeURIComponent(slug)}`;
+          return `<a href="${href}">${name}</a>`;
+        });
+        parts.push(catLinks.join(' | '));
+      }
+      if (publishDate) {
+        parts.push(formatPublishDate(publishDate));
+      }
+      return parts.join(' \u2022 '); // bullet between categories and date
+    }
+
+    function renderTags(tags) {
+      if (!tags || !tags.length) {
+        tagsSectionEl.style.display = 'none';
+        return;
+      }
+      tagsSectionEl.style.display = '';
+      tagsListEl.innerHTML = tags
+        .map(tag => {
+          const name = tag.name || '';
+          const slug = slugify(name);
+          const href = `/article-feed/tag/${encodeURIComponent(slug)}`;
+          return `<a class="article-tag-pill" href="${href}">${name}</a>`;
+        })
+        .join('');
+    }
+
+    function renderAuthor(author) {
+      if (!author) {
+        authorCardEl.style.display = 'none';
+        return;
+      }
+      authorCardEl.style.display = '';
+
+      const name = author.name || 'Carolina Panorama';
+      const slug = slugify(name);
+      const href = `/article-feed/author/${encodeURIComponent(slug)}`;
+
+      authorNameEl.innerHTML = `<a href="${href}">${name}</a>`;
+      authorBioEl.textContent = author.bio || '';
+
+      // Avatar
+      while (authorAvatarEl.firstChild) {
+        authorAvatarEl.removeChild(authorAvatarEl.firstChild);
+      }
+      if (author.profile_image) {
+        const img = document.createElement('img');
+        img.src = author.profile_image;
+        img.alt = name;
+        authorAvatarEl.appendChild(img);
+      } else {
+        const initials = name
+          .split(/\s+/)
+          .map(part => part.charAt(0).toUpperCase())
+          .slice(0, 2)
+          .join('');
+        authorAvatarEl.textContent = initials || 'CP';
+      }
+
+      // Social links
+      authorSocialEl.innerHTML = '';
+      if (Array.isArray(author.social_links) && author.social_links.length) {
+        author.social_links.forEach(link => {
+          if (!link.url) return;
+          const a = document.createElement('a');
+          a.href = link.url;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          const platform = (link.platform || '').toString();
+          a.textContent = platform ? platform.charAt(0).toUpperCase() + platform.slice(1) : link.url;
+          authorSocialEl.appendChild(a);
+        });
+      }
+    }
+
+    async function loadArticle() {
+      const slug = getSlugFromPath();
+      if (!slug) {
+        // If we can't determine the slug, send the user to a 404 page
+        window.location.href = notFoundUrl;
+        return;
+      }
+
+      const url = `${apiBase}/api/public/articles/slug/${encodeURIComponent(slug)}`;
+      try {
+        const res = await fetch(url);
+        const json = await res.json();
+        if (!json.success || !json.data) {
+          window.location.href = notFoundUrl;
+          return;
+        }
+
+        const article = json.data;
+        const pageTitle = article.title || 'Article';
+        titleEl.textContent = pageTitle;
+        // Update browser tab title using meta_title if available
+        if (article.meta_title) {
+          document.title = article.meta_title;
+        } else {
+          document.title = pageTitle + ' | Carolina Panorama';
+        }
+        metaEl.innerHTML = renderCategories(article.categories || [], article.publish_date);
+        bodyEl.innerHTML = article.content || '';
+
+        renderTags(article.tags || []);
+        renderAuthor(article.author || null);
+      } catch (e) {
+        console.error('Failed to load article from CMS:', e);
+        window.location.href = notFoundUrl;
+      }
+    }
+
+    backToTopBtn.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    loadArticle();
+  });
+</script>

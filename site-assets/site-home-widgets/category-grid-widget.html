@@ -61,32 +61,26 @@ function waitForLibrariesAndInitCategoryGrid(callback, timeout = 10000) {
 }
 
 async function fetchCategories() {
-  const baseUrl = 'https://backend.leadconnectorhq.com/blogs/categories?locationId=9Iv8kFcMiUgScXzMPv23';
-  const limit = 10;
-  let offset = 0;
-  let allCategories = [];
-  let seen = new Set();
-  let totalCount = null;
-  do {
-    const url = `${baseUrl}&limit=${limit}&offset=${offset}`;
-    try {
-      const res = await fetch(url);
-      const data = await res.json();
-      if (totalCount === null) totalCount = data.count || 0;
-      const newCats = (data.categories || []).filter(cat => {
-        if (!cat.urlSlug || seen.has(cat.urlSlug)) return false;
-        seen.add(cat.urlSlug);
-        return true;
-      });
-      allCategories = allCategories.concat(newCats);
-      offset += limit;
-      if (allCategories.length >= totalCount) break;
-    } catch (e) {
-      console.error('Failed to fetch categories:', e);
-      break;
+  const apiBase = (window.CarolinaPanorama && window.CarolinaPanorama.API_BASE_URL) || 'https://cms.carolinapanorama.org';
+  const url = `${apiBase}/api/public/categories`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.success && Array.isArray(data.data)) {
+      return data.data;
     }
-  } while (allCategories.length < (totalCount || 0));
-  return allCategories;
+  } catch (e) {
+    console.error('Failed to fetch categories from CMS:', e);
+  }
+  return [];
+}
+
+function slugify(str) {
+  return String(str || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-');
 }
 
 function renderCategoryGrid(categories) {
@@ -94,10 +88,13 @@ function renderCategoryGrid(categories) {
   if (!grid) return;
   grid.innerHTML = '';
   categories.forEach(cat => {
+    const name = cat.name || cat.label || '';
+    if (!name) return;
+    const slug = slugify(name);
     const a = document.createElement('a');
     a.className = 'category-grid-item';
-    a.href = `https://carolinapanorama.com/article-feed/category/${cat.urlSlug}`;
-    a.textContent = cat.label;
+    a.href = `https://carolinapanorama.com/article-feed/category/${slug}`;
+    a.textContent = name;
     a.setAttribute('tabindex', '0');
     grid.appendChild(a);
   });

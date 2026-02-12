@@ -245,6 +245,54 @@ waitForCarolinaPanorama(function() {
     let totalCount = 0;
     let currentFilter = {};
 
+    const apiBase = window.CarolinaPanorama.API_BASE_URL || 'https://cms.carolinapanorama.org';
+
+    // Simple slug helper to match names coming from API
+    function slugify(str) {
+        return String(str || '')
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-');
+    }
+
+    let categoriesCache = null;
+    let authorsCache = null;
+
+    async function ensureCategories() {
+        if (categoriesCache) return categoriesCache;
+        try {
+            const res = await fetch(`${apiBase}/api/public/categories`);
+            const json = await res.json();
+            if (json.success && Array.isArray(json.data)) {
+                categoriesCache = json.data;
+            } else {
+                categoriesCache = [];
+            }
+        } catch (e) {
+            console.error('Failed to load categories from CMS:', e);
+            categoriesCache = [];
+        }
+        return categoriesCache;
+    }
+
+    async function ensureAuthors() {
+        if (authorsCache) return authorsCache;
+        try {
+            const res = await fetch(`${apiBase}/api/public/authors`);
+            const json = await res.json();
+            if (json.success && Array.isArray(json.data)) {
+                authorsCache = json.data;
+            } else {
+                authorsCache = [];
+            }
+        } catch (e) {
+            console.error('Failed to load authors from CMS:', e);
+            authorsCache = [];
+        }
+        return authorsCache;
+    }
+
     // Utility to get filter from URL (category or tag)
     function getFilterFromUrl() {
         const path = window.location.pathname;
@@ -262,43 +310,66 @@ waitForCarolinaPanorama(function() {
         return {};
     }
 
-    // Fetch articles for current page and filter
+    // Fetch articles for current page and filter from CMS public API
     async function fetchArticles(page = 1) {
         currentFilter = getFilterFromUrl();
-        const offset = (page - 1) * ARTICLES_PER_PAGE;
-        const params = Object.assign({
-            limit: ARTICLES_PER_PAGE,
-            offset: offset
-        }, currentFilter);
-        // Fetch raw response to get count
-        const baseUrl = 'https://backend.leadconnectorhq.com/blogs/posts/list';
-        const urlParams = [
-            `locationId=9Iv8kFcMiUgScXzMPv23`,
-            `blogId=iWSdkAQOuuRNrWiAHku1`,
-            `limit=${ARTICLES_PER_PAGE}`,
-            `offset=${offset}`
-        ];
-        if (params.categoryUrlSlug) urlParams.push(`categoryUrlSlug=${encodeURIComponent(params.categoryUrlSlug)}`);
-        if (params.tag) urlParams.push(`tag=${encodeURIComponent(params.tag)}`);
-        if (params.author) urlParams.push(`author=${encodeURIComponent(params.author)}`);
-        const url = `${baseUrl}?${urlParams.join('&')}`;
+        const params = new URLSearchParams();
+        params.set('page', String(page));
+        params.set('per_page', String(ARTICLES_PER_PAGE));
+
+        let categoryDetails = null;
+        let authorDetails = null;
+
+        if (currentFilter.categoryUrlSlug) {
+            const slug = currentFilter.categoryUrlSlug;
+            const cats = await ensureCategories();
+            const match = cats.find(c => slugify(c.name) === slug);
+            if (match) {
+                params.set('category', match.name);
+                categoryDetails = { label: match.name };
+            }
+        }
+
+        if (currentFilter.tag) {
+            // Interpret slug-ish tag from URL as tag name
+            const tagName = decodeURIComponent(currentFilter.tag).replace(/-/g, ' ');
+            params.set('tag', tagName);
+        }
+
+        if (currentFilter.author) {
+            const slug = currentFilter.author;
+            const authors = await ensureAuthors();
+            const match = authors.find(a => slugify(a.name) === slug);
+            if (match) {
+                params.set('author_id', String(match.id));
+                authorDetails = { name: match.name };
+            }
+        }
+
+        const url = `${apiBase}/api/public/articles?${params.toString()}`;
         const response = await fetch(url);
         const data = await response.json();
-        totalCount = data.count || 0;
+        if (!data.success || !Array.isArray(data.data)) {
+            totalCount = 0;
+            return { articles: [], categoryDetails, authorDetails };
+        }
+        const paginationInfo = data.pagination || {};
+        totalCount = paginationInfo.total || data.data.length || 0;
+
         return {
-          articles: (data.blogPosts || []).map(post => ({
-            url: post.canonicalLink || (post.urlSlug ? `/post/${post.urlSlug}` : ''),
-            title: post.title,
-            description: post.description,
-            image: post.imageUrl || "https://storage.googleapis.com/msgsndr/9Iv8kFcMiUgScXzMPv23/media/697bd8644d56831c95c3248d.svg",
-            author: post.author?.name || 'Unknown',
-            date: post.publishedAt,
-            categories: Array.isArray(post.categories) && post.categories.length > 0
-                ? post.categories.map(cat => cat.label)
-                : ['News']
-          })),
-          categoryDetails: data.categoryDetails || null,
-            authorDetails: data.authorDetails || null
+            articles: data.data.map(article => ({
+                url: article.url || (article.slug ? `/post/${article.slug}` : ''),
+                title: article.title,
+                description: article.excerpt || '',
+                image: article.featured_image || "https://storage.googleapis.com/msgsndr/9Iv8kFcMiUgScXzMPv23/media/697bd8644d56831c95c3248d.svg",
+                author: article.author && article.author.name ? article.author.name : 'Unknown',
+                date: article.publish_date,
+                categories: Array.isArray(article.categories) && article.categories.length > 0
+                    ? article.categories.map(cat => cat.name)
+                    : ['News']
+            })),
+            categoryDetails,
+            authorDetails
         };
     }
 

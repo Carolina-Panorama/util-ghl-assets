@@ -9,6 +9,10 @@
     
     // Utility: Format date for display
     window.CarolinaPanorama = window.CarolinaPanorama || {};
+
+    // Base URL for Carolina Panorama CMS public API
+    // Can be overridden by setting window.CarolinaPanorama.API_BASE_URL before this script runs
+    window.CarolinaPanorama.API_BASE_URL = window.CarolinaPanorama.API_BASE_URL || 'https://cms.carolinapanorama.org';
     
     window.CarolinaPanorama.formatDate = function(dateString) {
         if (!dateString) return '';
@@ -158,52 +162,55 @@
 
     // proxiedLeadConnectorUrl already present as window.CarolinaPanorama.proxiedLeadConnectorUrl
     /**
-     * Fetch articles from backend API and map to metadata objects.
-     * @param {Object} params - { limit, offset, categoryUrlSlug }
+     * Fetch articles from Carolina Panorama CMS public API and map to metadata objects.
+     * This preserves the original return shape expected by existing widgets.
+     * @param {Object} params - { limit, offset, categoryUrlSlug, tag }
      * @returns {Promise<Array>} Array of article metadata objects
      */
     window.CarolinaPanorama.fetchArticlesFromBackend = async function({
         limit = 10,
         offset = 0,
         categoryUrlSlug = null,
-        tag = null,
-        locationId = '9Iv8kFcMiUgScXzMPv23',
-        blogId = 'iWSdkAQOuuRNrWiAHku1'
+        tag = null
     } = {}) {
-        const baseUrl = 'https://backend.leadconnectorhq.com/blogs/posts/list';
-        const params = [
-            `locationId=${encodeURIComponent(locationId)}`,
-            `blogId=${encodeURIComponent(blogId)}`,
-            `limit=${encodeURIComponent(limit)}`,
-            `offset=${encodeURIComponent(offset)}`
-        ];
-        // Only one of tag or categoryUrlSlug can be used
-        if (tag && !categoryUrlSlug) {
-            // If tag is an array, join with comma, else use as is
-            const tagValue = Array.isArray(tag) ? tag.join(',') : tag;
-            params.push(`tag=${encodeURIComponent(tagValue)}`);
-        } else if (categoryUrlSlug && !tag) {
-            params.push(`categoryUrlSlug=${encodeURIComponent(categoryUrlSlug)}`);
+        const apiBase = window.CarolinaPanorama.API_BASE_URL || 'https://domain.org';
+        const perPage = limit;
+        const page = Math.floor(offset / perPage) + 1;
+
+        const params = new URLSearchParams();
+        params.set('page', String(page));
+        params.set('per_page', String(perPage));
+
+        if (categoryUrlSlug) {
+            // For now, treat the slug as the category name; if your
+            // routes use pretty slugs, ensure the backend accepts this
+            // value or update to resolve via /api/public/categories.
+            params.set('category', categoryUrlSlug);
         }
-        const url = `${baseUrl}?${params.join('&')}`;
+        if (tag) {
+            params.set('tag', tag);
+        }
+
+        const url = `${apiBase}/api/public/articles?${params.toString()}`;
         try {
             const response = await fetch(url);
-            if (!response.ok) throw new Error(`Backend fetch failed: ${response.status}`);
-            const data = await response.json();
-            if (!data.blogPosts || !Array.isArray(data.blogPosts)) return [];
-            return data.blogPosts.map(post => ({
-                url: post.canonicalLink  || (post.urlSlug ? `/post/${post.urlSlug}` : ''),
-                title: post.title,
-                description: post.description,
-                image: post.imageUrl,
-                author: post.author?.name || 'Unknown',
-                date: post.publishedAt,
-                categories: Array.isArray(post.categories) && post.categories.length > 0
-                    ? post.categories.map(cat => cat.label)
+            if (!response.ok) throw new Error(`CMS fetch failed: ${response.status}`);
+            const json = await response.json();
+            if (!json.success || !Array.isArray(json.data)) return [];
+
+            return json.data.map(article => ({
+                url: article.url || (article.slug ? `/post/${article.slug}` : ''),
+                title: article.title,
+                description: article.excerpt || '',
+                image: article.featured_image,
+                author: article.author && article.author.name ? article.author.name : 'Unknown',
+                date: article.publish_date,
+                categories: Array.isArray(article.categories) && article.categories.length > 0
+                    ? article.categories.map(cat => cat.name)
                     : ['News']
             }));
         } catch (error) {
-            console.error('Error fetching articles from backend:', error);
+            console.error('Error fetching articles from CMS:', error);
             return [];
         }
     };

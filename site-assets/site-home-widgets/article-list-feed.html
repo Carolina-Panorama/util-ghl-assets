@@ -154,15 +154,9 @@ waitForCarolinaPanorama(function() {
     const container = document.getElementById('article-list-container');
     const MAX_ARTICLES = 10; // Number of articles to display
 
-    // Fetch latest articles from backend
-    async function fetchLatestArticles() {
-        // You can add categoryUrlSlug if needed
-        return await window.CarolinaPanorama.fetchArticlesFromBackend({ limit: MAX_ARTICLES });
-    }
-
     // Use global CarolinaPanorama helpers
-    const fetchArticleMetadata = window.CarolinaPanorama.fetchArticleMetadata;
     const proxiedLeadConnectorUrl = window.CarolinaPanorama.proxiedLeadConnectorUrl;
+    const apiBase = window.CarolinaPanorama.API_BASE_URL || 'https://cms.carolinapanorama.org';
     function formatDate(date) {
         const options = { month: 'numeric', day: 'numeric', year: 'numeric' };
         return 'Published on: ' + new Date(date).toLocaleDateString('en-US', options);
@@ -200,8 +194,28 @@ waitForCarolinaPanorama(function() {
 
     // Initialize feed
     async function initializeFeed() {
-        // Fetch latest articles from backend
-        const articles = await fetchLatestArticles();
+        // Fetch latest articles from CMS public API
+        const url = `${apiBase}/api/public/articles?per_page=${MAX_ARTICLES}&page=1`;
+        let articles = [];
+        try {
+            const res = await fetch(url);
+            const json = await res.json();
+            if (json.success && Array.isArray(json.data)) {
+                articles = json.data.map(article => ({
+                    url: article.url || (article.slug ? `/post/${article.slug}` : ''),
+                    title: article.title,
+                    description: article.excerpt || '',
+                    image: article.featured_image,
+                    author: article.author && article.author.name ? article.author.name : 'Unknown',
+                    date: article.publish_date,
+                    categories: Array.isArray(article.categories) && article.categories.length > 0
+                        ? article.categories.map(cat => cat.name)
+                        : ['News']
+                }));
+            }
+        } catch (e) {
+            console.error('Failed to load latest articles from CMS:', e);
+        }
         if (!articles || articles.length === 0) {
             container.innerHTML = '<p style="text-align: center; color: #666;">No articles found.</p>';
             return;
