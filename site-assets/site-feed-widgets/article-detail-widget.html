@@ -288,15 +288,25 @@
     }
 
     function getSlugFromPath() {
+      // Try to get slug from query parameter first (/article?q=slug)
+      const urlParams = new URLSearchParams(window.location.search);
+      const querySlug = urlParams.get('q');
+      
+      if (querySlug) {
+        console.log('[Article Detail Widget] Extracted slug from query parameter:', querySlug);
+        return decodeURIComponent(querySlug);
+      }
+      
+      // Fallback to path-based extraction (/post/slug)
       const path = window.location.pathname || '';
       console.log('[Article Detail Widget] Current pathname:', path);
-      const match = path.match(/\/post\/([^/]+)/);
+      const match = path.match(/\/(?:post|article)\/([^/]+)/);
       if (!match) {
-        console.warn('[Article Detail Widget] Could not extract slug from path. Expected pattern: /post/{slug}');
+        console.warn('[Article Detail Widget] Could not extract slug from path or query. Expected: /article?q={slug} or /post/{slug}');
         return null;
       }
       const slug = decodeURIComponent(match[1]);
-      console.log('[Article Detail Widget] Extracted slug:', slug);
+      console.log('[Article Detail Widget] Extracted slug from path:', slug);
       return slug;
     }
 
