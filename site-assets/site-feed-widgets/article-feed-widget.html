@@ -358,7 +358,7 @@ waitForCarolinaPanorama(function() {
 
         return {
             articles: data.data.map(article => ({
-                url: article.url || (article.slug ? `/post/${article.slug}` : ''),
+                url: article.url || (article.slug ? `/article/${article.slug}` : ''),
                 title: article.title,
                 description: article.excerpt || '',
                 image: article.featured_image || "https://storage.googleapis.com/msgsndr/9Iv8kFcMiUgScXzMPv23/media/697bd8644d56831c95c3248d.svg",
