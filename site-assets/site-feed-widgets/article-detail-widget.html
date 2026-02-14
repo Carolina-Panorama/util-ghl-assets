@@ -254,8 +254,24 @@
     })();
   }
 
+  // Try to prevent GHL's redirect by intercepting navigation
+  const originalLocation = window.location;
+  let preventRedirect = false;
+  
+  Object.defineProperty(window, 'location', {
+    get: function() { return originalLocation; },
+    set: function(url) {
+      if (preventRedirect && (url.includes('404') || url.includes('not-found'))) {
+        console.log('[Article Detail Widget] Blocked redirect to:', url);
+        return;
+      }
+      originalLocation.href = url;
+    }
+  });
+  
   waitForCarolinaPanorama(function () {
     console.log('[Article Detail Widget] CarolinaPanorama global loaded successfully');
+    preventRedirect = true; // Activate redirect blocking
     
     const container = document.getElementById('cp-article-detail');
     const titleEl = document.getElementById('cp-article-title');
@@ -288,26 +304,35 @@
     }
 
     function getSlugFromPath() {
-      // Extract slug from path (/article/slug)
       const path = window.location.pathname || '';
       console.log('[Article Detail Widget] Current pathname:', path);
-      const match = path.match(/\/article\/([^/]+)/);
       
-      if (match) {
-        const slug = decodeURIComponent(match[1]);
-        console.log('[Article Detail Widget] Extracted slug from path:', slug);
+      // Try colon format: /article:slug
+      const colonMatch = path.match(/\/article:([^/]+)/);
+      if (colonMatch) {
+        const slug = decodeURIComponent(colonMatch[1]);
+        console.log('[Article Detail Widget] Extracted slug from colon format:', slug);
         return slug;
       }
       
-      // Fallback to query parameter if needed (/article?q=slug)
+      // Try slash format: /article/slug
+      const slashMatch = path.match(/\/article\/([^/]+)/);
+      if (slashMatch) {
+        const slug = decodeURIComponent(slashMatch[1]);
+        console.log('[Article Detail Widget] Extracted slug from slash format:', slug);
+        return slug;
+      }
+      
+      // Check for query parameter: /article?q=slug
       const urlParams = new URLSearchParams(window.location.search);
       const querySlug = urlParams.get('q');
       if (querySlug) {
+        const slug = decodeURIComponent(querySlug);
         console.log('[Article Detail Widget] Extracted slug from query parameter:', querySlug);
-        return decodeURIComponent(querySlug);
+        return slug;
       }
       
-      console.warn('[Article Detail Widget] Could not extract slug from path or query. Expected: /article/{slug}');
+      console.warn('[Article Detail Widget] Could not extract slug. Expected: /article:slug, /article/slug, or /article?q=slug');
       return null;
     }
 
