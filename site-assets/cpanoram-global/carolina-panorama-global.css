@@ -31,6 +31,23 @@ h3 {
     font-size: clamp(1rem, 2vw, 1.25rem);
 }
 
+.headlines-section-header {
+    text-align: center !important;
+    margin-bottom: 32px !important;
+    padding-bottom: 16px !important;
+    border-bottom: 3px solid #3b82f6 !important;
+}
+
+.headlines-section-title {
+    font-size: 2.5rem !important;
+    font-weight: 700 !important;
+    color: #1a1a1a !important;
+    margin: 0 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    font-family: 'Georgia', serif !important;
+}
+
 /* ARTICLE CARD BASE STYLES */
 .cp-article-card {
     border-radius: 6px;
@@ -142,7 +159,7 @@ h3 {
     gap: clamp(2px, 0.3vw, 3px);
 }
 
-.cp-article-author::before {
+.cp-article-author:not(:empty)::before {
     content: "👤";
     font-size: clamp(0.7rem, 0.85vw, 0.75rem);
 }

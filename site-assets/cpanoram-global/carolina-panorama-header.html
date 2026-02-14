@@ -434,7 +434,7 @@
                     title: post.title,
                     description: post.description,
                     image: post.imageUrl,
-                    author: post.author?.name || 'Unknown',
+                    author: post.author?.name || '',
                     date: post.publishedAt,
                     categories: Array.isArray(post.categories) && post.categories.length > 0
                         ? post.categories.map(cat => cat.label)

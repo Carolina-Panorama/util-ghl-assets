@@ -326,7 +326,11 @@ waitForCarolinaPanorama(function() {
             const match = cats.find(c => slugify(c.name) === slug);
             if (match) {
                 params.set('category', match.name);
-                categoryDetails = { label: match.name };
+                // Include description for SEO
+                categoryDetails = { 
+                    label: match.name,
+                    description: match.description || ''
+                };
             }
         }
 
@@ -342,7 +346,11 @@ waitForCarolinaPanorama(function() {
             const match = authors.find(a => slugify(a.name) === slug);
             if (match) {
                 params.set('author_id', String(match.id));
-                authorDetails = { name: match.name };
+                // Include bio for SEO
+                authorDetails = { 
+                    name: match.name,
+                    bio: match.bio || ''
+                };
             }
         }
 
@@ -358,11 +366,11 @@ waitForCarolinaPanorama(function() {
 
         return {
             articles: data.data.map(article => ({
-                url: article.slug ? `/article?q=${encodeURIComponent(article.slug)}` : '',
+                url: article.slug ? `/article/${encodeURIComponent(article.slug)}` : '',
                 title: article.title,
                 description: article.excerpt || '',
                 image: article.featured_image || "https://storage.googleapis.com/msgsndr/9Iv8kFcMiUgScXzMPv23/media/697bd8644d56831c95c3248d.svg",
-                author: article.author && article.author.name ? article.author.name : 'Unknown',
+                author: article.author && article.author.name ? article.author.name : '',
                 date: article.publish_date,
                 categories: Array.isArray(article.categories) && article.categories.length > 0
                     ? article.categories.map(cat => cat.name)
@@ -451,27 +459,67 @@ waitForCarolinaPanorama(function() {
         // Reset classes
         headerContainer.className = '';
         
+        // SEO Meta injection based on page type
         if (categoryDetails && categoryDetails.label) {
             // Category state - use cp-article-tag class with category name
             const categoryClass = categoryDetails.label.toLowerCase().replace(/\s+/g, '-');
             headerContainer.className = 'cp-article-tag ' + categoryClass;
             headerTitle.innerHTML = `<span class="header-title">${categoryDetails.label}</span>`;
+            
+            // Set SEO meta for category pages
+            const categoryName = categoryDetails.label;
+            window.CarolinaPanorama.setPageMeta({
+                title: `${categoryName} Articles | Carolina Panorama`,
+                description: categoryDetails.description || `Browse the latest ${categoryName} articles from Carolina Panorama`,
+                keywords: `${categoryName}, Carolina Panorama, news, articles`,
+                url: window.location.href,
+                type: 'website'
+            });
         } else if (filter.tag) {
             // Tag state - Carolina Navy Blue box with label
             headerContainer.className = 'tag-header';
             headerTitle.innerHTML = `<span class="header-label">Tagged Entity</span><span class="header-title">${filter.tag}</span>`;
+            
+            // Set SEO meta for tag pages
+            window.CarolinaPanorama.setPageMeta({
+                title: `Articles tagged: ${filter.tag} | Carolina Panorama`,
+                description: `Explore articles about ${filter.tag} from Carolina Panorama`,
+                keywords: `${filter.tag}, Carolina Panorama, tags, topics`,
+                url: window.location.href,
+                type: 'website'
+            });
         } else if (filter.author) {
             // Author state - Carolina Navy Blue box with label
             let authorName = 'Unknown Author';
+            let authorBio = '';
             if (authorDetails && authorDetails.name) {
                 authorName = authorDetails.name;
+                authorBio = authorDetails.bio || '';
             }
             headerContainer.className = 'author-header';
             headerTitle.innerHTML = `<span class="header-label">Written by:</span><span class="header-title">${authorName}</span>`;
+            
+            // Set SEO meta for author pages
+            window.CarolinaPanorama.setPageMeta({
+                title: `Articles by ${authorName} | Carolina Panorama`,
+                description: authorBio || `Read articles written by ${authorName} at Carolina Panorama`,
+                keywords: `${authorName}, author, Carolina Panorama, articles`,
+                url: window.location.href,
+                type: 'profile'
+            });
         } else {
             // Latest Articles - keep original style
             headerContainer.className = 'latest-header';
             headerTitle.textContent = 'Latest Articles';
+            
+            // Set SEO meta for homepage/latest
+            window.CarolinaPanorama.setPageMeta({
+                title: 'Latest Articles | Carolina Panorama',
+                description: 'Browse the latest news and articles from Carolina Panorama',
+                keywords: 'Carolina Panorama, latest news, articles, updates',
+                url: window.location.href,
+                type: 'website'
+            });
         }
         
         headerContainer.style.display = '';

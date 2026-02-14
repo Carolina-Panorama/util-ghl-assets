@@ -203,7 +203,7 @@
                 title: article.title,
                 description: article.excerpt || '',
                 image: article.featured_image,
-                author: article.author && article.author.name ? article.author.name : 'Unknown',
+                author: article.author && article.author.name ? article.author.name : '',
                 date: article.publish_date,
                 categories: Array.isArray(article.categories) && article.categories.length > 0
                     ? article.categories.map(cat => cat.name)
@@ -214,6 +214,76 @@
             return [];
         }
     };
+    /**
+     * SEO Meta Tag Injection Utilities
+     * Update page meta tags for SEO (title, description, keywords, og tags)
+     */
+    window.CarolinaPanorama.setPageMeta = function({
+        title = '',
+        description = '',
+        keywords = '',
+        image = '',
+        url = '',
+        type = 'website'
+    } = {}) {
+        // Update document title
+        if (title) {
+            document.title = title;
+        }
+        
+        // Helper to set or update a meta tag
+        function setMeta(selector, content) {
+            if (!content) return;
+            let tag = document.querySelector(selector);
+            if (!tag) {
+                const [attr, value] = selector.match(/\[(.+)="(.+)"\]/)?.[0]?.replace(/[\[\]]/g, '').split('=') || [];
+                if (attr && value) {
+                    tag = document.createElement('meta');
+                    tag.setAttribute(attr, value.replace(/"/g, ''));
+                    document.head.appendChild(tag);
+                }
+            }
+            if (tag) tag.setAttribute('content', content);
+        }
+        
+        // Standard meta tags
+        if (description) {
+            setMeta('meta[name="description"]', description);
+        }
+        if (keywords) {
+            setMeta('meta[name="keywords"]', keywords);
+        }
+        
+        // Open Graph tags
+        if (title) {
+            setMeta('meta[property="og:title"]', title);
+        }
+        if (description) {
+            setMeta('meta[property="og:description"]', description);
+        }
+        if (image) {
+            setMeta('meta[property="og:image"]', image);
+        }
+        if (url) {
+            setMeta('meta[property="og:url"]', url);
+        }
+        if (type) {
+            setMeta('meta[property="og:type"]', type);
+        }
+        
+        // Twitter Card tags
+        setMeta('meta[name="twitter:card"]', 'summary_large_image');
+        if (title) {
+            setMeta('meta[name="twitter:title"]', title);
+        }
+        if (description) {
+            setMeta('meta[name="twitter:description"]', description);
+        }
+        if (image) {
+            setMeta('meta[name="twitter:image"]', image);
+        }
+    };
+    
     console.log('Carolina Panorama Global JS loaded');
 
     // Wait for Broadstreet JS library to load, then insert the ad zone

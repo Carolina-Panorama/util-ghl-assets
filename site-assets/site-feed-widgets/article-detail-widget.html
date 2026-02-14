@@ -288,26 +288,27 @@
     }
 
     function getSlugFromPath() {
-      // Try to get slug from query parameter first (/article?q=slug)
+      // Extract slug from path (/article/slug)
+      const path = window.location.pathname || '';
+      console.log('[Article Detail Widget] Current pathname:', path);
+      const match = path.match(/\/article\/([^/]+)/);
+      
+      if (match) {
+        const slug = decodeURIComponent(match[1]);
+        console.log('[Article Detail Widget] Extracted slug from path:', slug);
+        return slug;
+      }
+      
+      // Fallback to query parameter if needed (/article?q=slug)
       const urlParams = new URLSearchParams(window.location.search);
       const querySlug = urlParams.get('q');
-      
       if (querySlug) {
         console.log('[Article Detail Widget] Extracted slug from query parameter:', querySlug);
         return decodeURIComponent(querySlug);
       }
       
-      // Fallback to path-based extraction (/post/slug)
-      const path = window.location.pathname || '';
-      console.log('[Article Detail Widget] Current pathname:', path);
-      const match = path.match(/\/(?:post|article)\/([^/]+)/);
-      if (!match) {
-        console.warn('[Article Detail Widget] Could not extract slug from path or query. Expected: /article?q={slug} or /post/{slug}');
-        return null;
-      }
-      const slug = decodeURIComponent(match[1]);
-      console.log('[Article Detail Widget] Extracted slug from path:', slug);
-      return slug;
+      console.warn('[Article Detail Widget] Could not extract slug from path or query. Expected: /article/{slug}');
+      return null;
     }
 
     function formatPublishDate(dateStr) {
@@ -457,6 +458,26 @@
         } else {
           document.title = pageTitle + ' | Carolina Panorama';
         }
+        
+        // Inject SEO meta tags for article
+        const keywords = [];
+        if (article.tags && article.tags.length > 0) {
+          keywords.push(...article.tags.map(tag => tag.name || tag));
+        }
+        if (article.categories && article.categories.length > 0) {
+          keywords.push(...article.categories.map(cat => cat.name || cat));
+        }
+        keywords.push('Carolina Panorama');
+        
+        window.CarolinaPanorama.setPageMeta({
+          title: article.meta_title || (pageTitle + ' | Carolina Panorama'),
+          description: article.meta_description || article.excerpt || '',
+          keywords: keywords.join(', '),
+          image: article.featured_image || '',
+          url: window.location.href,
+          type: 'article'
+        });
+        
         metaEl.innerHTML = renderCategories(article.categories || [], article.publish_date);
         renderFeaturedImage(article.featured_image, article.featured_image_alt);
         bodyEl.innerHTML = article.content || '';
