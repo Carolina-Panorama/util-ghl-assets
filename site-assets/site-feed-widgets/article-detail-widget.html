@@ -254,24 +254,8 @@
     })();
   }
 
-  // Try to prevent GHL's redirect by intercepting navigation
-  const originalLocation = window.location;
-  let preventRedirect = false;
-  
-  Object.defineProperty(window, 'location', {
-    get: function() { return originalLocation; },
-    set: function(url) {
-      if (preventRedirect && (url.includes('404') || url.includes('not-found'))) {
-        console.log('[Article Detail Widget] Blocked redirect to:', url);
-        return;
-      }
-      originalLocation.href = url;
-    }
-  });
-  
   waitForCarolinaPanorama(function () {
     console.log('[Article Detail Widget] CarolinaPanorama global loaded successfully');
-    preventRedirect = true; // Activate redirect blocking
     
     const container = document.getElementById('cp-article-detail');
     const titleEl = document.getElementById('cp-article-title');
