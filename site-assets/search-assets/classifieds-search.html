@@ -886,13 +886,15 @@
 </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/algoliasearch@4.14.2/dist/algoliasearch-lite.umd.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/instantsearch.js@4.49.1/dist/instantsearch.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/algoliasearch@4.14.2/dist/algoliasearch-lite.umd.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/instantsearch.js@4.49.1/dist/instantsearch.production.min.js" defer></script>
 
-<script>
+<script defer>
 (function() {
     'use strict';
     
+    // Wait for scripts to load before initializing
+    window.addEventListener('DOMContentLoaded', function() {
     // Use public Algolia Index and Search API Key - update with your classifieds index
     const searchClient = algoliasearch('L5HJO2NLX1', '303488aa839f0fc1c6c0467ae84a0354');
 
@@ -1169,5 +1171,6 @@
     ]);
 
     search.start();
+    }); // End DOMContentLoaded
 })();
 </script>
