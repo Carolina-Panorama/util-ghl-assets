@@ -250,7 +250,7 @@
     <!-- Optional: Brand logo (uncomment and set src to display) -->
     <!-- <img class="yt-channel-logo" src="your-logo-url.png" alt="Brand Logo"> -->
     
-    <img class="yt-channel-avatar" id="yt-channel-avatar" src="" alt="Channel Avatar">
+    <img class="yt-channel-avatar" id="yt-channel-avatar" src="https://storage.googleapis.com/msgsndr/9Iv8kFcMiUgScXzMPv23/media/6984b3c50a7fd15b1977747c.png" alt="Channel Avatar">
     <div class="yt-channel-info">
       <h2 id="yt-channel-name">Loading...</h2>
       <p id="yt-channel-subscribers">Channel</p>
@@ -278,6 +278,15 @@ const YT_CHANNEL_CONFIG = {
 
 let videoData = [];
 
+function formatViewCount(count) {
+  if (count >= 1000000) {
+    return (count / 1000000).toFixed(1) + 'M';
+  } else if (count >= 1000) {
+    return (count / 1000).toFixed(1) + 'K';
+  }
+  return count.toString();
+}
+
 async function fetchChannelInfo() {
   try {
     // Fetch channel metadata from YouTube
@@ -286,7 +295,8 @@ async function fetchChannelInfo() {
     
     const params = new URLSearchParams({
       channel_id: YT_CHANNEL_CONFIG.channelId,
-      max_results: 8,
+      max_results: 10,
+      include_stats: 'true'  // Request view counts for this widget
     });
 
     const response = await fetch(`${YT_CHANNEL_CONFIG.apiBaseUrl}?${params}`);
@@ -368,7 +378,7 @@ function renderVideosGrid() {
               <path d="M12 5C6 5 2 12 2 12s4 7 10 7 10-7 10-7-4-7-10-7z"/>
               <circle cx="12" cy="12" r="3"/>
             </svg>
-            ${Math.floor(Math.random() * 100000)}
+            ${formatViewCount(video.view_count)}
           </span>
           <span>${timeAgo}</span>
         </div>
