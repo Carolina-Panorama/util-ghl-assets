@@ -10,6 +10,7 @@
 
   .article-detail-header {
     margin-bottom: 16px;
+    position: relative;
   }
 
   .article-share-buttons {
@@ -19,8 +20,11 @@
   }
 
   .article-share-buttons.top {
+    position: absolute;
+    top: 0;
+    right: 0;
+    flex-direction: column;
     gap: 8px;
-    margin-top: 12px;
   }
 
   .article-share-buttons.bottom {
