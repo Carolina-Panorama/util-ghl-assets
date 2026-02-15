@@ -133,8 +133,10 @@
         function createArticleCard(article) {
             const categoryTag = article.categories?.[0]?.name || 'News';
             const categoryClass = slugify(categoryTag);
-            const imageUrl = article.featured_image || 'https://storage.googleapis.com/msgsndr/9Iv8kFcMiUgScXzMPv23/media/697bd8644d56831c95c3248d.svg';
-            const proxied = window.CarolinaPanorama.proxiedLeadConnectorUrl ? 
+            const placeholderUrl = 'https://storage.googleapis.com/msgsndr/9Iv8kFcMiUgScXzMPv23/media/697bd8644d56831c95c3248d.svg';
+            const imageUrl = article.featured_image || placeholderUrl;
+            // Only proxy if it's not the placeholder
+            const proxied = (article.featured_image && window.CarolinaPanorama.proxiedLeadConnectorUrl) ? 
                 window.CarolinaPanorama.proxiedLeadConnectorUrl(imageUrl, 600) : imageUrl;
             const authorName = article.author?.name || 'Carolina Panorama';
             
