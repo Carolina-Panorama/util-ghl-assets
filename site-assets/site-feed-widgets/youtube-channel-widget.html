@@ -295,7 +295,7 @@ async function fetchChannelInfo() {
     
     const params = new URLSearchParams({
       channel_id: YT_CHANNEL_CONFIG.channelId,
-      max_results: 10,
+      max_results: 8, // Limit to 8 videos for the grid
       include_stats: 'true'  // Request view counts for this widget
     });
 
