@@ -133,7 +133,7 @@
         function createArticleCard(article) {
             const categoryTag = article.categories?.[0]?.name || 'News';
             const categoryClass = slugify(categoryTag);
-            const imageUrl = article.featured_image || 'https://storage.googleapis.com/msgsndr/9Iv8kFcMiUgScXzMPv23/media/67976f8501b4d3a98fa70b74.svg';
+            const imageUrl = article.featured_image || 'https://storage.googleapis.com/msgsndr/9Iv8kFcMiUgScXzMPv23/media/697bd8644d56831c95c3248d.svg';
             const proxied = window.CarolinaPanorama.proxiedLeadConnectorUrl ? 
                 window.CarolinaPanorama.proxiedLeadConnectorUrl(imageUrl, 600) : imageUrl;
             const authorName = article.author?.name || 'Carolina Panorama';
