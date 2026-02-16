@@ -1,0 +1,179 @@
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/instantsearch.css@7.4.5/themes/satellite-min.css" />
+
+<style>
+    .classifieds-sidebar-widget {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        padding: 0;
+        margin: 0;
+    }
+
+    .classifieds-sidebar-widget * {
+        box-sizing: border-box;
+    }
+
+    .classifieds-sidebar-widget .sidebar-header {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .classifieds-sidebar-widget .sidebar-items {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .classifieds-sidebar-widget .sidebar-item {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border: 1px solid rgba(0, 51, 102, 0.1);
+        border-radius: 8px;
+        padding: 10px 12px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        text-decoration: none;
+        display: block;
+    }
+
+    .classifieds-sidebar-widget .sidebar-item:hover {
+        background: linear-gradient(135deg, #e8f1f9 0%, #e0ebf5 100%);
+        border-color: rgba(0, 51, 102, 0.3);
+        transform: translateX(2px);
+        box-shadow: 0 2px 8px rgba(0, 51, 102, 0.12);
+    }
+
+    .classifieds-sidebar-widget .sidebar-item-title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0 0 4px 0;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .classifieds-sidebar-widget .sidebar-item-category {
+        font-size: 0.75rem;
+        color: #6b7280;
+        font-weight: 500;
+        margin: 0;
+    }
+
+    .classifieds-sidebar-widget .priority-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #003366, #0066cc);
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        margin-left: 4px;
+        vertical-align: middle;
+    }
+
+    .classifieds-sidebar-widget .sidebar-empty {
+        text-align: center;
+        color: #9ca3af;
+        font-size: 0.85rem;
+        padding: 16px 0;
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 640px) {
+        .classifieds-sidebar-widget .sidebar-item {
+            padding: 8px 10px;
+        }
+
+        .classifieds-sidebar-widget .sidebar-item-title {
+            font-size: 0.8rem;
+        }
+
+        .classifieds-sidebar-widget .sidebar-item-category {
+            font-size: 0.7rem;
+        }
+    }
+</style>
+
+<div class="classifieds-sidebar-widget">
+    <div class="sidebar-header">Top Classifieds</div>
+    <div id="sidebar-items" class="sidebar-items"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/algoliasearch@4.14.2/dist/algoliasearch-lite.umd.js"></script>
+
+<script>
+(function() {
+    'use strict';
+    
+    function initializeSidebar() {
+        if (typeof algoliasearch === 'undefined') {
+            console.log('Waiting for Algolia library to load...');
+            setTimeout(initializeSidebar, 100);
+            return;
+        }
+        
+        console.log('Initializing classifieds sidebar...');
+        
+        const searchClient = algoliasearch('L5HJO2NLX1', '303488aa839f0fc1c6c0467ae84a0354');
+        
+        const client = searchClient;
+        const indexName = 'prod_CarolinaPanorama_Classifieds';
+        
+        // Search for all classifieds, limited to top results
+        client.search([
+            {
+                indexName: indexName,
+                query: '',
+                params: {
+                    hitsPerPage: 8,
+                    distinct: true,
+                    attributesToRetrieve: ['title', 'category', 'priority'],
+                }
+            }
+        ]).then(({ results }) => {
+            const hits = results[0].hits;
+            const container = document.getElementById('sidebar-items');
+            
+            // Sort by priority (highest first)
+            const sorted = hits.sort((a, b) => {
+                const priorityA = a.priority || 0;
+                const priorityB = b.priority || 0;
+                return priorityB - priorityA;
+            });
+            
+            if (sorted.length === 0) {
+                container.innerHTML = '<div class="sidebar-empty">No classifieds available</div>';
+                return;
+            }
+            
+            // Display top results
+            container.innerHTML = sorted.map(hit => `
+                <div class="sidebar-item">
+                    <div class="sidebar-item-title">
+                        ${hit.title || 'Untitled'}
+                        ${hit.priority ? `<span class="priority-badge">P${hit.priority}</span>` : ''}
+                    </div>
+                    <div class="sidebar-item-category">
+                        ${hit.category || 'Uncategorized'}
+                    </div>
+                </div>
+            `).join('');
+        }).catch(err => {
+            console.error('Error fetching classifieds:', err);
+            document.getElementById('sidebar-items').innerHTML = '<div class="sidebar-empty">Unable to load classifieds</div>';
+        });
+    }
+    
+    // Start initialization when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeSidebar);
+    } else {
+        initializeSidebar();
+    }
+})();
+</script>
