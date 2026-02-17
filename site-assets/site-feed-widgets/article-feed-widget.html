@@ -382,13 +382,13 @@ waitForCarolinaPanorama(function() {
     }
 
     // Render articles
-    function renderArticles(articles) {
+    async function renderArticles(articles) {
         if (!articles || articles.length === 0) {
             container.innerHTML = '<p style="text-align: center; color: #666;">No articles found.</p>';
             return;
         }
-        const cardsHTML = articles.map(data => createArticleCard(data)).join('');
-        container.innerHTML = cardsHTML;
+        const cardsHTML = await Promise.all(articles.map((data, index) => createArticleCard(data, index)));
+        container.innerHTML = cardsHTML.join('');
     }
 
     // Render pagination
@@ -401,26 +401,38 @@ waitForCarolinaPanorama(function() {
             <span class="page-count">${page} / ${totalPages}</span>
             <button id="feed-next" ${nextDisabled ? 'disabled' : ''} aria-label="Next Page">&raquo;</button>
         `;
+        
+        // Debounce pagination clicks to prevent double-clicks
+        const debouncedChangePage = window.CarolinaPanorama.debounce(changePage, 300);
+        
         document.getElementById('feed-prev').onclick = function() {
-            if (!prevDisabled) changePage(page - 1);
+            if (!prevDisabled) debouncedChangePage(page - 1);
         };
         document.getElementById('feed-next').onclick = function() {
-            if (!nextDisabled) changePage(page + 1);
+            if (!nextDisabled) debouncedChangePage(page + 1);
         };
     }
 
     // Create article card HTML
-    function createArticleCard(data) {
-        const categoryTags = data.categories.slice(0, 2).map(cat => {
-            const categoryClass = cat.toLowerCase().replace(/\s+/g, '-');
-            return `<span class="cp-article-tag ${categoryClass}">${cat}</span>`;
-        }).join('');
+    async function createArticleCard(data, index) {
+        // Get category styles dynamically
+        const categoryTagsHTML = await Promise.all(
+            data.categories.slice(0, 2).map(async cat => {
+                const categoryClass = cat.toLowerCase().replace(/\s+/g, '-');
+                const style = await window.CarolinaPanorama.getCategoryStyle(cat);
+                return `<span class="cp-article-tag ${categoryClass}" style="${style}">${cat}</span>`;
+            })
+        );
+        
         const imageUrl = data.image || 'https://storage.googleapis.com/msgsndr/9Iv8kFcMiUgScXzMPv23/media/697bd8644d56831c95c3248d.svg';
+        // Lazy load images after the first 3 articles
+        const loadingAttr = index >= 3 ? 'loading="lazy"' : 'loading="eager"';
+        
         return `
             <div class="article-list-item">
                 <article class="cp-article-card">
                     <a href="${data.url}" class="cp-article-card-link">
-                        <img src="${imageUrl}" alt="${data.title}" class="cp-article-image">
+                        <img src="${imageUrl}" alt="${data.title}" class="cp-article-image" ${loadingAttr}>
                         <div class="cp-article-content">
                             <h2 class="cp-article-title">${data.title}</h2>
                             <div class="cp-article-meta">
@@ -429,7 +441,7 @@ waitForCarolinaPanorama(function() {
                             </div>
                             <p class="cp-article-description">${data.description}</p>
                             <div class="cp-article-tags">
-                                ${categoryTags}
+                                ${categoryTagsHTML.join('')}
                             </div>
                             <span class="cp-article-read-more">Read More</span>
                         </div>
@@ -448,7 +460,7 @@ waitForCarolinaPanorama(function() {
     async function changePage(page) {
         currentPage = page;
         const { articles, categoryDetails, authorDetails } = await fetchArticles(page);
-        renderArticles(articles);
+        await renderArticles(articles);
         renderPagination(page, totalCount);
         
         // Update header with stylized states
@@ -466,12 +478,43 @@ waitForCarolinaPanorama(function() {
             headerContainer.className = 'cp-article-tag ' + categoryClass;
             headerTitle.innerHTML = `<span class="header-title">${categoryDetails.label}</span>`;
             
-            // Set SEO meta for category pages
+            // Set SEO meta for category pages with description and extracted keywords
             const categoryName = categoryDetails.label;
+            const description = categoryDetails.description || `Browse the latest ${categoryName} articles from Carolina Panorama`;
+            
+            // Build contextual keywords
+            const baseKeywords = [categoryName];
+            
+            // Add Black-focused variations for relevant categories
+            const blackFocusedCategories = ['Business', 'Finance', 'Politics', 'Health', 'Education', 'Culture', 'Community'];
+            if (blackFocusedCategories.includes(categoryName)) {
+                baseKeywords.push(`Black ${categoryName}`);
+                baseKeywords.push(`African American ${categoryName}`);
+            }
+            
+            // Add geographic variations
+            const geoVariations = ['South Carolina', 'Columbia', 'Orangeburg', 'Lexington'];
+            geoVariations.forEach(location => {
+                baseKeywords.push(`${location} ${categoryName}`);
+            });
+            
+            // Extract keywords from description if available
+            if (categoryDetails.description && window.CarolinaPanorama.extractKeywords) {
+                const extractedKeywords = window.CarolinaPanorama.extractKeywords(categoryDetails.description, 3);
+                if (extractedKeywords) {
+                    baseKeywords.push(extractedKeywords);
+                }
+            }
+            
+            // Add standard context
+            baseKeywords.push('Carolina Panorama', 'news', 'articles');
+            
+            const keywords = baseKeywords.join(', ');
+            
             window.CarolinaPanorama.setPageMeta({
                 title: `${categoryName} Articles | Carolina Panorama`,
-                description: categoryDetails.description || `Browse the latest ${categoryName} articles from Carolina Panorama`,
-                keywords: `${categoryName}, Carolina Panorama, news, articles`,
+                description: description,
+                keywords: keywords,
                 url: window.location.href,
                 type: 'website'
             });

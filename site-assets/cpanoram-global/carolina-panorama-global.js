@@ -30,10 +30,166 @@
         return text.substring(0, maxLength).trim() + '...';
     };
     
+    // Utility: Debounce function to limit rate of function calls
+    window.CarolinaPanorama.debounce = function(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    };
+    
+    // Add preconnect hints for performance
+    (function addPreconnects() {
+        const domains = [
+            'https://cms.carolinapanorama.org',
+            'https://api.carolinapanorama.com',
+            'https://storage.googleapis.com',
+            'https://images.leadconnectorhq.com'
+        ];
+        
+        domains.forEach(domain => {
+            const link = document.createElement('link');
+            link.rel = 'preconnect';
+            link.href = domain;
+            link.crossOrigin = 'anonymous';
+            document.head.appendChild(link);
+        });
+    })();
+    
     // Utility: Get category class for styling
     window.CarolinaPanorama.getCategoryClass = function(category) {
         if (!category) return '';
         return category.toLowerCase().replace(/\s+/g, '-');
+    };
+
+    // Category cache and utilities
+    let categoriesCache = null;
+    let categoriesFetchPromise = null;
+    const CACHE_KEY = 'cp_categories_cache';
+    const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+
+    // Fetch and cache categories from CMS with localStorage persistence
+    window.CarolinaPanorama.fetchCategories = async function(forceRefresh = false) {
+        // Check memory cache first
+        if (categoriesCache && !forceRefresh) {
+            return categoriesCache;
+        }
+        
+        // Check localStorage cache
+        if (!forceRefresh) {
+            try {
+                const cached = localStorage.getItem(CACHE_KEY);
+                if (cached) {
+                    const { data, timestamp } = JSON.parse(cached);
+                    const age = Date.now() - timestamp;
+                    
+                    if (age < CACHE_DURATION) {
+                        categoriesCache = data;
+                        console.log('[CarolinaPanorama] Loaded', data.length, 'categories from localStorage cache');
+                        return categoriesCache;
+                    } else {
+                        localStorage.removeItem(CACHE_KEY);
+                    }
+                }
+            } catch (e) {
+                console.warn('[CarolinaPanorama] Failed to read localStorage cache:', e);
+            }
+        }
+        
+        // If already fetching, return the existing promise
+        if (categoriesFetchPromise) {
+            return categoriesFetchPromise;
+        }
+        
+        categoriesFetchPromise = (async () => {
+            try {
+                const apiBase = window.CarolinaPanorama.API_BASE_URL || 'https://cms.carolinapanorama.org';
+                const response = await fetch(`${apiBase}/api/public/categories`);
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    categoriesCache = data.data;
+                    
+                    // Store in localStorage
+                    try {
+                        localStorage.setItem(CACHE_KEY, JSON.stringify({
+                            data: categoriesCache,
+                            timestamp: Date.now()
+                        }));
+                    } catch (e) {
+                        console.warn('[CarolinaPanorama] Failed to cache in localStorage:', e);
+                    }
+                    
+                    console.log('[CarolinaPanorama] Fetched and cached', categoriesCache.length, 'categories');
+                    return categoriesCache;
+                }
+                
+                return [];
+            } catch (error) {
+                console.error('[CarolinaPanorama] Failed to fetch categories:', error);
+                return [];
+            } finally {
+                categoriesFetchPromise = null;
+            }
+        })();
+        
+        return categoriesFetchPromise;
+    };
+
+    // Get category details by name
+    window.CarolinaPanorama.getCategoryByName = async function(categoryName) {
+        if (!categoryName) return null;
+        
+        const categories = await window.CarolinaPanorama.fetchCategories();
+        const normalized = categoryName.toLowerCase().trim();
+        
+        return categories.find(cat => 
+            cat.name.toLowerCase() === normalized
+        ) || null;
+    };
+
+    // Get inline style for category tag with color from CMS
+    window.CarolinaPanorama.getCategoryStyle = async function(categoryName) {
+        const category = await window.CarolinaPanorama.getCategoryByName(categoryName);
+        
+        if (category && category.color_code) {
+            return `background-color: ${category.color_code} !important;`;
+        }
+        
+        // Fallback to default blue
+        return 'background-color: #3b82f6 !important;';
+    };
+
+    // Extract keywords from text (simple implementation)
+    window.CarolinaPanorama.extractKeywords = function(text, maxKeywords = 5) {
+        if (!text) return '';
+        
+        // Common words to exclude
+        const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'should', 'could', 'may', 'might', 'must', 'can', 'this', 'that', 'these', 'those', 'it', 'its', 'their', 'them', 'they']);
+        
+        // Extract words, filter stop words, get most meaningful ones
+        const words = text.toLowerCase()
+            .replace(/[^\w\s]/g, ' ')
+            .split(/\s+/)
+            .filter(word => word.length > 3 && !stopWords.has(word));
+        
+        // Count word frequency
+        const wordCount = {};
+        words.forEach(word => {
+            wordCount[word] = (wordCount[word] || 0) + 1;
+        });
+        
+        // Sort by frequency and take top N
+        return Object.entries(wordCount)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, maxKeywords)
+            .map(([word]) => word)
+            .join(', ');
     };
 
     // Normalize and proxy image URLs via LeadConnector image proxy

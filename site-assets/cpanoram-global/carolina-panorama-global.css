@@ -1,5 +1,12 @@
-body, * {
+body {
     touch-action: pan-y;
+}
+
+/* Allow horizontal scroll for carousel elements */
+.trending-carousel-track,
+[class*="carousel"],
+[class*="slider"] {
+    touch-action: pan-x;
 }
 
 /* Center pagination controls in search-widget */

@@ -130,9 +130,10 @@
         }
 
         // Create article card HTML
-        function createArticleCard(article) {
+        async function createArticleCard(article) {
             const categoryTag = article.categories?.[0]?.name || 'News';
             const categoryClass = slugify(categoryTag);
+            const style = await window.CarolinaPanorama.getCategoryStyle(categoryTag);
             const placeholderUrl = 'https://storage.googleapis.com/msgsndr/9Iv8kFcMiUgScXzMPv23/media/697bd8644d56831c95c3248d.svg';
             const imageUrl = article.featured_image || placeholderUrl;
             const authorName = article.author?.name || 'Carolina Panorama';
@@ -144,7 +145,7 @@
                             <img src="${imageUrl}" alt="${article.featured_image_alt || article.title}" class="cp-article-image">
                             <div class="cp-article-content">
                                 <div class="cp-article-tags">
-                                    <span class="cp-article-tag ${categoryClass}">${categoryTag}</span>
+                                    <span class="cp-article-tag ${categoryClass}" style="${style}">${categoryTag}</span>
                                 </div>
                                 <h3 class="cp-article-title">${article.title}</h3>
                                 <div class="cp-article-meta">
@@ -176,8 +177,8 @@
                 const source = json.source;
                 console.log(`[Trending Carousel] Loaded ${articles.length} articles (source: ${source})`);
                 
-                const cardsHTML = articles.map(article => createArticleCard(article)).join('');
-                track.innerHTML = cardsHTML;
+                const cardsHTML = await Promise.all(articles.map(article => createArticleCard(article)));
+                track.innerHTML = cardsHTML.join('');
             } catch (e) {
                 console.error('[Trending Carousel] Failed to load articles:', e);
             }

@@ -274,7 +274,7 @@
         }
 
         // Update a single article card
-        function updateArticleCard(linkElement, article) {
+        async function updateArticleCard(linkElement, article) {
             linkElement.href = article.url;
 
             const image = linkElement.querySelector('.cp-article-image');
@@ -292,11 +292,15 @@
             
             const tagsContainer = linkElement.querySelector('.cp-article-tags');
             if (article.categories && article.categories.length) {
-                tagsContainer.innerHTML = article.categories.slice(0, 2).map(cat => {
-                    const catName = cat.name || cat;
-                    const catClass = slugify(catName);
-                    return `<span class="cp-article-tag ${catClass}">${catName}</span>`;
-                }).join('');
+                const categoryTags = await Promise.all(
+                    article.categories.slice(0, 2).map(async cat => {
+                        const catName = cat.name || cat;
+                        const catClass = slugify(catName);
+                        const style = await window.CarolinaPanorama.getCategoryStyle(catName);
+                        return `<span class="cp-article-tag ${catClass}" style="${style}">${catName}</span>`;
+                    })
+                );
+                tagsContainer.innerHTML = categoryTags.join('');
             }
             
             const title = linkElement.querySelector('.cp-article-title');
@@ -344,11 +348,11 @@
                 console.log(`[Headlines Grid] Loaded ${articles.length} articles from edition: ${edition || 'N/A'}`);
                 
                 const articleLinks = document.querySelectorAll('.cp-article-card-link');
-                articleLinks.forEach((link, index) => {
+                for (let index = 0; index < articleLinks.length; index++) {
                     if (articles[index]) {
-                        updateArticleCard(link, articles[index]);
+                        await updateArticleCard(articleLinks[index], articles[index]);
                     }
-                });
+                }
             } catch (e) {
                 console.error('[Headlines Grid] Failed to load articles:', e);
             }
