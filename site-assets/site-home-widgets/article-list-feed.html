@@ -13,7 +13,106 @@
     .article-list-container {
         display: flex;
         flex-direction: column;
-        gap: 0;
+        gap: 20px;
+    }
+
+    /* Featured article card */
+    .featured-article-item {
+        display: block;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .featured-article-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .featured-article-card {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        align-items: stretch;
+        border-radius: 8px;
+        overflow: hidden;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .featured-article-link {
+        display: contents;
+    }
+
+    .featured-image-container {
+        overflow: hidden;
+        background: #f3f4f6;
+        border-radius: 8px 0 0 8px;
+    }
+
+    .featured-image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .featured-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 24px;
+        gap: 12px;
+    }
+
+    .featured-section-header {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0 0 12px 0;
+    }
+
+    .featured-article-title {
+        font-size: 1.4rem;
+        line-height: 1.4;
+        margin: 0;
+        font-weight: 700;
+        color: #1a202c;
+    }
+
+    .featured-article-item:hover .featured-article-title {
+        color: #003366;
+    }
+
+    .featured-article-meta {
+        margin: 0;
+        font-size: 0.85rem;
+        color: #6b7280;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .featured-article-description {
+        margin: 0;
+        font-size: 0.95rem;
+        color: #4b5563;
+        line-height: 1.5;
+    }
+
+    /* Condensed list section */
+    .condensed-list-section {
+        border-top: 1px solid #e5e7eb;
+        padding-top: 20px;
+    }
+
+    .condensed-list-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0 0 12px 0;
+        padding: 0 8px;
     }
 
     /* Condensed list layout */
@@ -28,7 +127,7 @@
 
     .article-list-item .cp-article-card {
         display: grid;
-        grid-template-columns: 60px 1fr auto;
+        grid-template-columns: 50px 1fr;
         gap: 12px;
         align-items: start;
         padding: 12px 8px;
@@ -42,11 +141,12 @@
 
     /* Number badge */
     .article-number {
-        font-size: 1.25rem;
+        font-size: 1rem;
         font-weight: 700;
         color: #9ca3af;
         text-align: center;
         padding-top: 2px;
+        flex-shrink: 0;
     }
 
     .article-list-item:hover .article-number {
@@ -59,15 +159,9 @@
         min-width: 0;
     }
 
-    /* Category tags - stacked vertically for consistent alignment */
+    /* Category tags - hide since grouped by category */
     .article-list-item .cp-article-tags {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        align-items: flex-start;
-        min-width: 90px;
-        max-width: 90px;
-        flex-shrink: 0;
+        display: none;
     }
 
     .article-list-item .cp-article-tag {
@@ -122,6 +216,25 @@
     }
 
     /* Responsive design */
+    @media (max-width: 768px) {
+        .featured-article-card {
+            grid-template-columns: 1fr;
+        }
+
+        .featured-image-container {
+            border-radius: 8px 8px 0 0;
+            min-height: 200px;
+        }
+
+        .featured-content {
+            padding: 16px;
+        }
+
+        .featured-article-title {
+            font-size: 1.2rem;
+        }
+    }
+
     @media (max-width: 640px) {
         .article-list-item .cp-article-card {
             grid-template-columns: 40px 1fr;
@@ -129,7 +242,7 @@
         }
 
         .article-number {
-            font-size: 1rem;
+            font-size: 0.9rem;
         }
 
         .article-list-item .cp-article-tags {
@@ -158,21 +271,21 @@
 <div class="article-list-feed-wrapper">
     <div class="article-list-container" id="article-list-container">
         <!-- Loading state -->
-        <div class="article-list-item">
-            <article class="cp-article-card">
-                <div style="width: 350px; height: 220px; background: #f7fafc; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #9ca3af;">
+        <div class="featured-article-item">
+            <article class="featured-article-card">
+                <div class="featured-image-container" style="background: #f7fafc; display: flex; align-items: center; justify-content: center; color: #9ca3af;">
                     Loading...
                 </div>
-                <div class="cp-article-content">
-                    <div class="cp-article-tags">
-                        <span class="cp-article-tag">Loading</span>
+                <div class="featured-content">
+                    <div class="featured-article-tags">
+                        <span class="featured-article-tag">Loading</span>
                     </div>
-                    <h2 class="cp-article-title">Loading articles...</h2>
-                    <div class="cp-article-meta">
-                        <span class="cp-article-author">Carolina Panorama</span>
-                        <span class="cp-article-date">Today</span>
+                    <h2 class="featured-article-title">Loading featured article...</h2>
+                    <div class="featured-article-meta">
+                        <span>Carolina Panorama</span>
+                        <span>Today</span>
                     </div>
-                    <p class="cp-article-description">Please wait while we load the latest content...</p>
+                    <p class="featured-article-description">Please wait while we load the latest content...</p>
                 </div>
             </article>
         </div>
@@ -196,32 +309,50 @@ function waitForCarolinaPanorama(callback, timeout = 5000) {
 
 waitForCarolinaPanorama(function() {
     const container = document.getElementById('article-list-container');
-    const MAX_ARTICLES = 16; // Number of articles to display
+    const CATEGORIES = ['Local News', 'Business', 'Sports', 'Education', 'Culture'];
+    const ARTICLES_PER_CATEGORY = 3;
+    const FEATURED_ARTICLES = 1;
+    const CONDENSED_ARTICLES = 2;
 
     // Use global CarolinaPanorama helpers
     const apiBase = window.CarolinaPanorama.API_BASE_URL || 'https://cms.carolinapanorama.org';
+    
     function formatDate(date) {
         const options = { month: 'numeric', day: 'numeric', year: 'numeric' };
         return 'Published on: ' + new Date(date).toLocaleDateString('en-US', options);
     }
 
-    // Create article card HTML
-    async function createArticleCard(data, index) {
-        // Get category styles dynamically - limit to 2, stack vertically
-        const categoryTagsHTML = await Promise.all(
-            data.categories.slice(0, 2).map(async cat => {
-                const categoryClass = cat.toLowerCase().replace(/\s+/g, '-');
-                const style = await window.CarolinaPanorama.getCategoryStyle(cat);
-                return `<span class="cp-article-tag ${categoryClass}" style="${style}">${cat}</span>`;
-            })
-        );
-        
-        // Pad with empty tag if only 1 category to maintain consistent height
-        while (categoryTagsHTML.length < 2) {
-            categoryTagsHTML.push('<span class="cp-article-tag" style="visibility: hidden;">Placeholder</span>');
-        }
-        
+    // Create featured article card HTML with category header
+    async function createFeaturedArticleCard(data) {
         const imageUrl = data.image || 'https://storage.googleapis.com/msgsndr/9Iv8kFcMiUgScXzMPv23/media/697bd8644d56831c95c3248d.svg';
+        const category = data.categories[0];
+        
+        return `
+            <div>
+                <h3 class="featured-section-header">${category}</h3>
+                <div class="featured-article-item">
+                    <a href="${data.url}" class="featured-article-link">
+                        <article class="featured-article-card">
+                            <div class="featured-image-container">
+                                <img src="${imageUrl}" alt="${data.title}" />
+                            </div>
+                            <div class="featured-content">
+                                <h2 class="featured-article-title">${data.title}</h2>
+                                <div class="featured-article-meta">
+                                    <span>${data.author}</span>
+                                    <span>${formatDate(data.date)}</span>
+                                </div>
+                                <p class="featured-article-description">${data.description}</p>
+                            </div>
+                        </article>
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+
+    // Create condensed article card HTML
+    async function createCondensedArticleCard(data, index) {
         return `
             <div class="article-list-item">
                 <article class="cp-article-card">
@@ -234,9 +365,6 @@ waitForCarolinaPanorama(function() {
                                 <span class="cp-article-date">${formatDate(data.date)}</span>
                             </div>
                         </div>
-                        <div class="cp-article-tags">
-                            ${categoryTagsHTML.join('')}
-                        </div>
                     </a>
                 </article>
             </div>
@@ -245,34 +373,63 @@ waitForCarolinaPanorama(function() {
 
     // Initialize feed
     async function initializeFeed() {
-        // Fetch latest articles from CMS public API
-        const url = `${apiBase}/api/public/articles?per_page=${MAX_ARTICLES}&page=1`;
-        let articles = [];
-        try {
-            const res = await fetch(url);
-            const json = await res.json();
-            if (json.success && Array.isArray(json.data)) {
-                articles = json.data.map(article => ({
-                    url: article.url || (article.slug ? `/post/${article.slug}` : ''),
-                    title: article.title,
-                    description: article.excerpt || '',
-                    image: article.featured_image,
-                    author: article.author && article.author.name ? article.author.name : '',
-                    date: article.publish_date,
-                    categories: Array.isArray(article.categories) && article.categories.length > 0
-                        ? article.categories.map(cat => cat.name)
-                        : ['News']
-                }));
+        let allArticles = [];
+        
+        // Fetch articles from each category
+        for (const category of CATEGORIES) {
+            const url = `${apiBase}/api/public/articles?category=${encodeURIComponent(category)}&per_page=${ARTICLES_PER_CATEGORY}&page=1`;
+            try {
+                const res = await fetch(url);
+                const json = await res.json();
+                if (json.success && Array.isArray(json.data)) {
+                    const categoryArticles = json.data.map(article => ({
+                        url: article.url || (article.slug ? `/post/${article.slug}` : ''),
+                        title: article.title,
+                        description: article.excerpt || '',
+                        image: article.featured_image,
+                        author: article.author && article.author.name ? article.author.name : '',
+                        date: article.publish_date,
+                        categories: Array.isArray(article.categories) && article.categories.length > 0
+                            ? article.categories.map(cat => cat.name)
+                            : [category]
+                    }));
+                    allArticles = allArticles.concat(categoryArticles);
+                }
+            } catch (e) {
+                console.error(`Failed to load articles for category ${category}:`, e);
             }
-        } catch (e) {
-            console.error('Failed to load latest articles from CMS:', e);
         }
-        if (!articles || articles.length === 0) {
+
+        if (!allArticles || allArticles.length === 0) {
             container.innerHTML = '<p style="text-align: center; color: #666;">No articles found.</p>';
             return;
         }
-        const cardsHTML = await Promise.all(articles.map((data, index) => createArticleCard(data, index)));
-        container.innerHTML = cardsHTML.join('');
+
+        // Find first article with an image for featured section
+        const featuredArticle = allArticles.find(article => article.image);
+        if (!featuredArticle) {
+            container.innerHTML = '<p style="text-align: center; color: #666;">No articles with images found.</p>';
+            return;
+        }
+
+        // Get condensed articles (exclude the featured one)
+        const condensedArticles = allArticles.filter(article => article !== featuredArticle).slice(0, CONDENSED_ARTICLES);
+
+        // Build HTML
+        let html = await createFeaturedArticleCard(featuredArticle);
+        
+        if (condensedArticles.length > 0) {
+            html += '<div class="condensed-list-section">';
+            html += '<h3 class="condensed-list-title">More from the news</h3>';
+            
+            const condensedCardsHTML = await Promise.all(
+                condensedArticles.map((data, index) => createCondensedArticleCard(data, index))
+            );
+            html += condensedCardsHTML.join('');
+            html += '</div>';
+        }
+
+        container.innerHTML = html;
     }
 
     // Initialize on page load
