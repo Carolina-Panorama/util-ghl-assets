@@ -1,0 +1,495 @@
+{
+  "migration_metadata": {
+    "site_name": "Carolina Panorama",
+    "total_pages": 16,
+    "migration_type": "API-first (keeping content via API)",
+    "expected_effort": "2-6 weeks",
+    "inventory_date": "2025-02-17"
+  },
+  "global_assets": {
+    "javascript": [
+      {
+        "file": "cpanoram-global/carolina-panorama-global.js",
+        "purpose": "Core utilities and API client",
+        "size": "~509 lines",
+        "key_exports": [
+          "CarolinaPanorama.API_BASE_URL",
+          "CarolinaPanorama.fetchCategories()",
+          "CarolinaPanorama.formatDate()",
+          "CarolinaPanorama.truncateText()",
+          "CarolinaPanorama.debounce()",
+          "CarolinaPanorama.getCategoryClass()"
+        ],
+        "external_domains": [
+          "https://cms.carolinapanorama.org",
+          "https://api.carolinapanorama.com",
+          "https://storage.googleapis.com",
+          "https://images.leadconnectorhq.com"
+        ],
+        "wp_migration_action": "Copy as-is to theme/js/global.js; adjust API_BASE_URL as needed"
+      }
+    ],
+    "css": [
+      {
+        "file": "cpanoram-global/carolina-panorama-global.css",
+        "purpose": "Global styles, typography, carousel touch, pagination",
+        "size": "~285 lines",
+        "wp_migration_action": "Enqueue in functions.php; can be part of theme main.css or separate"
+      }
+    ],
+    "html_templates": [
+      {
+        "file": "cpanoram-global/carolina-panorama-header.html",
+        "purpose": "Global header template",
+        "wp_migration_action": "Convert to theme header.php or use as reference"
+      },
+      {
+        "file": "cpanoram-global/widget-loader.html",
+        "purpose": "Widget initialization/loader",
+        "wp_migration_action": "Reference for widget enqueuing pattern in functions.php"
+      }
+    ]
+  },
+  "widgets": [
+    {
+      "widget_id": 1,
+      "name": "Article Detail Widget",
+      "file": "site-feed-widgets/article-detail-widget.html",
+      "type": "Full article display",
+      "lines": 768,
+      "complexity": "High",
+      "dependencies": [
+        "carolina-panorama-global.js"
+      ],
+      "key_selectors": [
+        "#cp-article-detail",
+        "#cp-article-title",
+        "#cp-article-meta",
+        "#cp-article-readtime-date",
+        "#cp-article-featured-image",
+        "#cp-article-body",
+        "#cp-article-tags",
+        "#cp-article-author-card"
+      ],
+      "api_endpoints_used": [
+        "{API_BASE_URL}/api/public/articles/{id}"
+      ],
+      "features": [
+        "Social share buttons (Facebook, Twitter, LinkedIn, Copy, Email, Reddit, SMS)",
+        "Featured image with caption",
+        "Tags list",
+        "Author card",
+        "Reading time estimate",
+        "Responsive design (mobile, tablet)"
+      ],
+      "wp_migration_options": [
+        {
+          "approach": "Shortcode (fastest)",
+          "effort": "2-3 hours",
+          "instructions": "Wrap HTML/JS as [cp_article_detail article_id='123']. PHP shortcode calls API, populates the widget markup."
+        },
+        {
+          "approach": "Gutenberg Block + REST endpoint (medium)",
+          "effort": "1-2 days",
+          "instructions": "Create block.json, register_block_type() with server-side render. Attributes: article_id."
+        },
+        {
+          "approach": "Custom post type + template (most robust, slowest)",
+          "effort": "3-5 days",
+          "instructions": "Import articles into WP posts, create single-article.php template, migrate social share logic to functions.php."
+        }
+      ]
+    },
+    {
+      "widget_id": 2,
+      "name": "Article Feed Widget",
+      "file": "site-feed-widgets/article-feed-widget.html",
+      "type": "Paginated article list",
+      "lines": 583,
+      "complexity": "Medium",
+      "dependencies": [
+        "carolina-panorama-global.js",
+        "shared-article-card-styles.css"
+      ],
+      "key_selectors": [
+        "#article-list-feed",
+        ".article-list-container",
+        ".article-list-item"
+      ],
+      "api_endpoints_used": [
+        "{API_BASE_URL}/api/public/articles",
+        "{API_BASE_URL}/api/public/articles?category={slug}&page={n}"
+      ],
+      "features": [
+        "Paginated list with filters",
+        "Article card layout (grid or list)",
+        "Category filtering",
+        "Read time, author, date metadata"
+      ],
+      "wp_migration_options": [
+        {
+          "approach": "Shortcode with pagination (fastest)",
+          "effort": "3-4 hours",
+          "instructions": "[cp_article_feed category='tech' per_page='10' page='1']"
+        }
+      ]
+    },
+    {
+      "widget_id": 3,
+      "name": "Headlines Grid Widget v2",
+      "file": "site-home-widgets/headlines-grid-v2.html",
+      "type": "Featured articles grid",
+      "lines": 364,
+      "complexity": "Medium",
+      "dependencies": [
+        "carolina-panorama-global.js",
+        "shared-article-card-styles.css"
+      ],
+      "key_selectors": [
+        ".headlines-section-wrapper",
+        ".headlines-grid"
+      ],
+      "api_endpoints_used": [
+        "{API_BASE_URL}/api/public/articles?featured=true&limit=5"
+      ],
+      "features": [
+        "Featured badge on center article",
+        "3-column grid with asymmetric layout",
+        "Responsive (collapses to 1 column on mobile)"
+      ],
+      "wp_migration_options": [
+        {
+          "approach": "Shortcode [cp_headlines_grid]",
+          "effort": "2-3 hours",
+          "instructions": "Fetch top 5 featured articles from API, render grid markup."
+        }
+      ]
+    },
+    {
+      "widget_id": 4,
+      "name": "Category Grid Widget",
+      "file": "site-home-widgets/category-grid-widget.html",
+      "type": "Category navigation",
+      "lines": 102,
+      "complexity": "Low",
+      "dependencies": [
+        "carolina-panorama-global.js"
+      ],
+      "key_selectors": [
+        "#category-grid-list",
+        ".category-grid-item"
+      ],
+      "api_endpoints_used": [
+        "{API_BASE_URL}/api/public/categories"
+      ],
+      "features": [
+        "3-column grid (responsive)",
+        "Clickable category links",
+        "Hover effects"
+      ],
+      "wp_migration_options": [
+        {
+          "approach": "Shortcode [cp_category_grid] (fastest)",
+          "effort": "1-2 hours",
+          "instructions": "Fetch categories from API, generate grid. Can also use WP term taxonomy."
+        }
+      ]
+    },
+    {
+      "widget_id": 5,
+      "name": "Trending Carousel Widget v2",
+      "file": "site-home-widgets/trending-carousel-v2.html",
+      "type": "Carousel",
+      "lines": "Unknown (not fully read)",
+      "complexity": "Medium",
+      "dependencies": [
+        "carolina-panorama-global.js"
+      ],
+      "key_selectors": [
+        ".trending-carousel-track"
+      ],
+      "api_endpoints_used": [
+        "{API_BASE_URL}/api/public/articles?trending=true&limit=10"
+      ],
+      "features": [
+        "Horizontal carousel scroll",
+        "Article cards",
+        "Responsive"
+      ],
+      "wp_migration_options": [
+        {
+          "approach": "Shortcode [cp_trending_carousel]",
+          "effort": "2-3 hours",
+          "instructions": "Wrap existing carousel JS with shortcode callback."
+        }
+      ]
+    },
+    {
+      "widget_id": 6,
+      "name": "Article List Feed",
+      "file": "site-home-widgets/article-list-feed.html",
+      "type": "Article list variant",
+      "lines": "Unknown (not fully read)",
+      "complexity": "Low",
+      "dependencies": [
+        "carolina-panorama-global.js"
+      ],
+      "wp_migration_options": [
+        {
+          "approach": "Shortcode [cp_article_list]",
+          "effort": "1-2 hours"
+        }
+      ]
+    },
+    {
+      "widget_id": 7,
+      "name": "File List Preview",
+      "file": "site-home-widgets/file-list-preview.html",
+      "type": "File/document listing",
+      "lines": "Unknown (not fully read)",
+      "complexity": "Low",
+      "wp_migration_options": [
+        {
+          "approach": "Shortcode [cp_file_list]",
+          "effort": "1-2 hours"
+        }
+      ]
+    },
+    {
+      "widget_id": 8,
+      "name": "Search Widget",
+      "file": "search-assets/search-widget.html",
+      "type": "Algolia-powered search",
+      "lines": 548,
+      "complexity": "High",
+      "dependencies": [
+        "instantsearch.js (Algolia library)",
+        "carolina-panorama-global.js"
+      ],
+      "external_js": [
+        "https://cdn.jsdelivr.net/npm/instantsearch.css@7.4.5/themes/satellite-min.css"
+      ],
+      "key_selectors": [
+        ".search-container",
+        ".search-filters",
+        ".search-results"
+      ],
+      "api_endpoints_used": [
+        "Algolia Search API (instantsearch.js client)"
+      ],
+      "features": [
+        "Full-text search with Algolia",
+        "Refinements/facets sidebar",
+        "Results pagination",
+        "Responsive layout"
+      ],
+      "wp_migration_notes": "Algolia integration requires separate WP plugin setup (Algolia for WordPress). Plan for reindexing posts after import.",
+      "wp_migration_options": [
+        {
+          "approach": "Use WP Algolia plugin + custom search template",
+          "effort": "2-3 days",
+          "instructions": "Install plugin, configure API keys, reindex posts. Create custom search.php template with widget markup."
+        }
+      ]
+    },
+    {
+      "widget_id": 9,
+      "name": "Article Search",
+      "file": "search-assets/article-search.html",
+      "type": "Article-specific search",
+      "lines": "Unknown (not fully read)",
+      "complexity": "Medium",
+      "dependencies": [
+        "instantsearch.js"
+      ],
+      "wp_migration_options": [
+        {
+          "approach": "Shortcode [cp_article_search]",
+          "effort": "2-3 hours",
+          "instructions": "Variant of search widget, article-only results."
+        }
+      ]
+    },
+    {
+      "widget_id": 10,
+      "name": "Classifieds Search Sidebar",
+      "file": "search-assets/classifieds-sidebar-widget.html",
+      "type": "Search sidebar for classifieds",
+      "lines": "Unknown (not fully read)",
+      "complexity": "Low",
+      "wp_migration_options": [
+        {
+          "approach": "Shortcode [cp_classifieds_sidebar]",
+          "effort": "1-2 hours"
+        }
+      ]
+    },
+    {
+      "widget_id": 11,
+      "name": "Classifieds Search",
+      "file": "search-assets/classifieds-search.html",
+      "type": "Classifieds search results",
+      "lines": "Unknown (not fully read)",
+      "complexity": "Low",
+      "wp_migration_options": [
+        {
+          "approach": "Shortcode [cp_classifieds_search]",
+          "effort": "1-2 hours"
+        }
+      ]
+    },
+    {
+      "widget_id": 12,
+      "name": "Nav Search",
+      "file": "search-assets/nav-search.html",
+      "type": "Search in navigation",
+      "lines": "Unknown (not fully read)",
+      "complexity": "Low",
+      "wp_migration_options": [
+        {
+          "approach": "Integrate into header.php or custom search shortcode",
+          "effort": "1 hour"
+        }
+      ]
+    },
+    {
+      "widget_id": 13,
+      "name": "YouTube Channel Widget",
+      "file": "site-feed-widgets/youtube-channel-widget.html",
+      "type": "YouTube channel embed",
+      "lines": "Unknown (not fully read)",
+      "complexity": "Low",
+      "dependencies": [
+        "YouTube API"
+      ],
+      "wp_migration_options": [
+        {
+          "approach": "Shortcode [cp_youtube_channel channel_id='...']",
+          "effort": "1-2 hours",
+          "instructions": "Use YouTube API or native WP embed fallback."
+        }
+      ]
+    },
+    {
+      "widget_id": 14,
+      "name": "YouTube Playlist Carousel",
+      "file": "site-feed-widgets/youtube-playlist-carousel.html",
+      "type": "YouTube carousel",
+      "lines": "Unknown (not fully read)",
+      "complexity": "Medium",
+      "dependencies": [
+        "YouTube API",
+        "Carousel JS"
+      ],
+      "wp_migration_options": [
+        {
+          "approach": "Shortcode [cp_youtube_carousel playlist_id='...']",
+          "effort": "2-3 hours"
+        }
+      ]
+    },
+    {
+      "widget_id": 15,
+      "name": "Newsletter Category Subscribe",
+      "file": "site-feed-widgets/newsletter-category.html",
+      "type": "Newsletter subscription form",
+      "lines": "Unknown (not fully read)",
+      "complexity": "Medium",
+      "dependencies": [
+        "Form submission handler"
+      ],
+      "wp_migration_options": [
+        {
+          "approach": "Custom form + WP hooks or plugin (WPForms, Gravity Forms)",
+          "effort": "2-3 hours",
+          "instructions": "Create shortcode that renders form, hooks into newsletter API."
+        }
+      ]
+    },
+    {
+      "widget_id": 16,
+      "name": "Content Subscription Form (Quill Editor)",
+      "file": "form-widgets/content-sub.html",
+      "type": "Content submission form with rich text",
+      "lines": 70,
+      "complexity": "Low",
+      "dependencies": [
+        "Quill.js (rich text editor)"
+      ],
+      "external_js": [
+        "https://cdn.quilljs.com/1.3.6/quill.min.js"
+      ],
+      "features": [
+        "Rich text editing with Quill",
+        "Image upload (max 3 images, 2MB each)",
+        "Bold, italic, underline, link"
+      ],
+      "wp_migration_options": [
+        {
+          "approach": "Custom post type + Quill integration in custom meta box",
+          "effort": "1-2 days",
+          "instructions": "Create custom meta box with Quill editor, save to post meta."
+        },
+        {
+          "approach": "Shortcode [cp_submission_form] (faster)",
+          "effort": "2-3 hours",
+          "instructions": "Frontend form with Quill, submits to API or creates draft post."
+        }
+      ]
+    }
+  ],
+  "migration_strategy_recommendation": {
+    "phase_1_fast_track": {
+      "duration": "1-2 weeks",
+      "approach": "Shortcode wrapper for all widgets",
+      "effort": "Medium",
+      "steps": [
+        "1. Scaffold WordPress theme (header, footer, functions.php)",
+        "2. Enqueue global JS/CSS in functions.php",
+        "3. Create shortcode PHP files (one per widget) that echo the HTML and auto-enqueue widget-specific CSS/JS",
+        "4. Test shortcodes in WP dashboard",
+        "5. Create 16 pages in WP admin, assign shortcodes to pages"
+      ],
+      "pros": [
+        "Fast",
+        "Minimal refactoring",
+        "All existing widget logic preserved"
+      ],
+      "cons": [
+        "Not WP-native (not using WP REST API, post types, etc.)",
+        "Harder to manage from WP admin (content in external API still)"
+      ]
+    },
+    "phase_2_future_proof": {
+      "duration": "Additional 2-4 weeks (after Phase 1)",
+      "approach": "Convert to Gutenberg blocks or convert selected widgets to WP post types",
+      "steps": [
+        "1. High-value widgets first: Article Detail → custom post type, Headlines → WP post query",
+        "2. Medium-value: Search → WP Algolia plugin, Categories → WP term taxonomy",
+        "3. Low-value: Keep as shortcodes (YouTube, file list, forms)"
+      ],
+      "pros": [
+        "Full WordPress ecosystem integration",
+        "Content in WP, easier editorial workflow"
+      ],
+      "cons": [
+        "Longer timeline",
+        "Requires data migration (export/import posts)"
+      ]
+    }
+  },
+  "estimated_timeline": {
+    "phase_1_shortcode_approach": {
+      "theme_scaffold": "1-2 days",
+      "global_assets_integration": "0.5-1 day",
+      "widget_shortcodes": "8-12 hours per widget, ~5-7 days total for key widgets",
+      "page_creation_qa": "2-3 days",
+      "total": "10-15 days"
+    },
+    "phase_2_native_approach_per_widget": {
+      "gutenberg_block": "2-4 days",
+      "custom_post_type": "3-5 days",
+      "search_plugin_setup": "1-2 days"
+    }
+  }
+}

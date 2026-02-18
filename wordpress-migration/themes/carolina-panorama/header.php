@@ -22,10 +22,10 @@ if ( ! defined( 'ABSPATH' ) ) {
         <a class="skip-link screen-reader-text" href="#content"><?php _e( 'Skip to content', 'carolina-panorama' ); ?></a>
 
         <header id="masthead" class="site-header">
-            <div class="site-header-inner">
 
-                <div class="site-branding">
-                    <!-- Logo (hidden on mobile via CSS, matching original GHL desktop-only behaviour) -->
+            <!-- ===== Banner: logo + title + tagline ===== -->
+            <div class="site-banner">
+                <div class="site-banner-inner">
                     <div class="site-logo">
                         <?php if ( has_custom_logo() ) : ?>
                             <?php the_custom_logo(); ?>
@@ -57,23 +57,48 @@ if ( ! defined( 'ABSPATH' ) ) {
                             <p class="site-description"><?php echo esc_html( $description ); ?></p>
                         <?php endif; ?>
                     </div><!-- .site-identity -->
-                </div><!-- .site-branding -->
+                </div><!-- .site-banner-inner -->
+            </div><!-- .site-banner -->
 
-                <nav id="site-navigation" class="main-navigation" aria-label="Primary">
-                    <button class="menu-toggle" aria-controls="primary-menu" aria-expanded="false">
+            <!-- ===== Nav bar: menu + search ===== -->
+            <div class="site-nav-bar">
+                <div class="site-nav-inner">
+
+                    <button class="menu-toggle" aria-controls="site-navigation" aria-expanded="false">
                         <span class="menu-toggle-icon" aria-hidden="true">&#9776;</span>
                         <span class="screen-reader-text"><?php _e( 'Menu', 'carolina-panorama' ); ?></span>
                     </button>
-                    <?php
-                    wp_nav_menu( [
-                        'theme_location' => 'primary',
-                        'menu_id'        => 'primary-menu',
-                        'depth'          => 2,
-                    ] );
-                    ?>
-                </nav><!-- #site-navigation -->
 
-            </div><!-- .site-header-inner -->
+                    <nav id="site-navigation" class="main-navigation" aria-label="Primary">
+                        <?php
+                        wp_nav_menu( [
+                            'theme_location' => 'primary',
+                            'menu_id'        => 'primary-menu',
+                            'depth'          => 2,
+                        ] );
+                        ?>
+                    </nav><!-- #site-navigation -->
+
+                    <div class="nav-search-wrapper">
+                        <form action="<?php echo esc_url( home_url( '/search' ) ); ?>" method="get" class="nav-search-form">
+                            <input
+                                type="search"
+                                name="q"
+                                class="nav-search-input"
+                                placeholder="Search articles..."
+                                autocomplete="off"
+                                aria-label="Search articles"
+                                value="<?php echo esc_attr( get_search_query() ); ?>">
+                            <button type="submit" class="nav-search-button" aria-label="Search">
+                                <svg class="nav-search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                                <span>Search</span>
+                            </button>
+                        </form>
+                    </div><!-- .nav-search-wrapper -->
+
+                </div><!-- .site-nav-inner -->
+            </div><!-- .site-nav-bar -->
+
         </header><!-- #masthead -->
 
         <script>

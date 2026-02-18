@@ -1,0 +1,62 @@
+{
+  "shortcodes": [
+    {
+      "shortcode": "cp_article_detail",
+      "title": "Article Detail",
+      "file": "wordpress-migration/shortcodes/article_detail.php",
+      "attributes": [
+        {
+          "name": "article_id",
+          "type": "int",
+          "required": true,
+          "description": "Article ID from CMS API"
+        }
+      ]
+    },
+    {
+      "shortcode": "cp_article_feed",
+      "title": "Article Feed",
+      "file": "wordpress-migration/shortcodes/article_feed.php",
+      "attributes": [
+        {
+          "name": "category",
+          "type": "string",
+          "required": false,
+          "description": "Category slug"
+        },
+        {
+          "name": "per_page",
+          "type": "int",
+          "required": false,
+          "default": 10,
+          "description": "Articles per page"
+        },
+        {
+          "name": "page",
+          "type": "int",
+          "required": false,
+          "default": 1,
+          "description": "Page number"
+        }
+      ]
+    },
+    {
+      "shortcode": "cp_headlines_grid",
+      "title": "Headlines Grid",
+      "file": "wordpress-migration/shortcodes/headlines_grid.php",
+      "attributes": []
+    },
+    {
+      "shortcode": "cp_category_grid",
+      "title": "Category Grid",
+      "file": "wordpress-migration/shortcodes/category_grid.php",
+      "attributes": []
+    },
+    {
+      "shortcode": "cp_search",
+      "title": "Search Widget",
+      "file": "wordpress-migration/shortcodes/search.php",
+      "attributes": []
+    }
+  ]
+}

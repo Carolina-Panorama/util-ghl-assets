@@ -1,0 +1,17 @@
+/*
+Theme Name: Carolina Panorama
+Theme URI: https://example.com
+Description: WordPress theme for Carolina Panorama news site
+Version: 1.0.0
+Author: Briana Abraham
+Author URI: https://example.com
+License: GPL v2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: carolina-panorama
+Domain Path: /languages
+
+This theme is designed to migrate the existing Carolina Panorama site
+to WordPress while preserving widget-based architecture and API-driven content.
+*/
+
+/* Theme CSS is in css/ directory */
